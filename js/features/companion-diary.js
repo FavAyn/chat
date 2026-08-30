@@ -124,6 +124,7 @@
             await localforage.setItem(getKey(), _diaryEntries);
         } catch (e) {
             console.warn('[companion-diary] save failed:', e);
+            if (typeof _logStorageWriteFailure === 'function') _logStorageWriteFailure('companionDiary_save', e);
         }
     }
     // 暴露给 companion.js 调用：添加一条新记录
@@ -634,9 +635,14 @@
     }
     async function saveNoteFromEditor() {
         if (!_editingEntryId) return;
+        // 保存前先重新读一遍最新数据（跟 addCompanionDiaryEntry 一样的道理）：
+        // 避免内存里这份 _diaryEntries 是打开编辑框之前的旧快照，
+        // 期间如果有新的陪伴记录写入，直接存盘会把那条新记录覆盖掉。
+        const noteText = (document.getElementById('cd-note-edit-textarea').value || '').trim();
+        await loadDiary();
         const entry = _diaryEntries.find(e => String(e.id) === _editingEntryId);
         if (!entry) return;
-        entry.userNote = (document.getElementById('cd-note-edit-textarea').value || '').trim();
+        entry.userNote = noteText;
         await saveDiary();
         const modal = document.getElementById('cd-note-edit-modal');
         if (typeof hideModal === 'function') hideModal(modal);

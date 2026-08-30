@@ -78,6 +78,8 @@
         'stickerLibrary', 'myStickerLibrary', 'myStickerGroups',
         // 陪伴日记文字
         'companionData', 'companionDiary',
+        // 应急恢复诊断日志（排查"记录消失"这类问题用，纯文字，体积很小）
+        '_recoveryLog',
         // 信件
         'partnerLetterNextTime',
         // 阶段三A：背景图库（现在存的是 oss:// 引用 + 缩略图，可以同步）

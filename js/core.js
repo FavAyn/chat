@@ -510,30 +510,61 @@ const loadData = async () => {
 
         customPeriodCare = savedPeriodCare || [];  // 没有内置预设，用户没配置就是空数组
 
+        const chatMessagesRejected = results[1].status === 'rejected';
+        if (chatMessagesRejected) {
+            console.warn('[loadData] chatMessages 读取失败（不是真的没有数据），将重试一次:', results[1].reason);
+            _logRecoveryEvent('chatMessages_read_rejected', { reason: String(results[1].reason || '') });
+        }
+
         if (savedMessages && Array.isArray(savedMessages)) {
             messages = savedMessages.map(m => ({
                 ...m, timestamp: new Date(m.timestamp)
             }));
-        } else {
-            const backup = _tryRecoverFromBackup();
-            if (backup && Array.isArray(backup.messages) && backup.messages.length > 0) {
-                const timeSince = Math.round((Date.now() - backup.ts) / 60000);
-                console.warn(`[loadData] 主存储无消息，正在从备份恢复（备份时间：${timeSince} 分钟前）`);
-                messages = backup.messages.map(m => ({
-                    ...m, timestamp: new Date(m.timestamp)
-                }));
-                if (backup.settings) Object.assign(settings, backup.settings);
-                if (backup.anniversaries && Array.isArray(backup.anniversaries)) {
-                    anniversaries = backup.anniversaries;
-                }
-                setTimeout(() => saveData(), 1000);
-                showNotification(
-                    `已从备份恢复 ${messages.length} 条消息${backup._truncated ? '（备份为最近200条）' : ''}`,
-                    'warning', 6000
-                );
-            } else {
-                messages = [];
+        } else if (chatMessagesRejected) {
+            // 读取本身报错（不是"读到了但确实是空"）：先重试一次直接读，
+            // 避免把"这次读取抽风了"误判成"真的没数据"，从而错误地拿旧备份顶上。
+            let retryVal = null;
+            try {
+                retryVal = await localforage.getItem(getStorageKey('chatMessages'));
+            } catch (e) {
+                console.warn('[loadData] chatMessages 重试读取仍然失败:', e);
+                _logRecoveryEvent('chatMessages_retry_failed', { reason: String(e && e.message || e) });
             }
+            if (retryVal && Array.isArray(retryVal)) {
+                console.warn('[loadData] chatMessages 重试读取成功，使用重试结果');
+                messages = retryVal.map(m => ({ ...m, timestamp: new Date(m.timestamp) }));
+            } else {
+                // 重试也拿不到：只在这种情况下才考虑用应急备份垫底，且用"合并"而不是"覆盖"，
+                // 并且不在这里自动存盘——避免把可能只是暂时读取失败的这次结果直接写死。
+                const backup = _tryRecoverFromBackup();
+                if (backup && Array.isArray(backup.messages) && backup.messages.length > 0) {
+                    const timeSince = Math.round((Date.now() - backup.ts) / 60000);
+                    console.warn(`[loadData] 主存储读取持续失败，从应急备份合并恢复（备份时间：${timeSince} 分钟前）`);
+                    const { merged, addedCount } = _mergeBackupMessages([], backup.messages);
+                    messages = merged;
+                    if (backup.settings) Object.assign(settings, backup.settings);
+                    if (backup.anniversaries && Array.isArray(backup.anniversaries)) {
+                        anniversaries = backup.anniversaries;
+                    }
+                    _logRecoveryEvent('restored_from_backup_on_load', { addedCount, backupAgeMin: timeSince, truncated: !!backup._truncated });
+                    showNotification(
+                        `聊天记录读取异常，已从本地应急备份恢复 ${messages.length} 条消息${backup._truncated ? '（备份为最近200条，可能不完整）' : ''}，请检查是否完整`,
+                        'warning', 8000
+                    );
+                    // 注意：这里不再 setTimeout 自动 saveData()——等用户下一次正常操作触发保存即可，
+                    // 不主动把这份"可能不完整"的恢复结果立刻写死成正式数据。
+                } else {
+                    // 连备份都没有：保守起见，先留空，不写入存储（等下次正常保存时机自然写入），
+                    // 并明确提示用户，而不是悄悄清空又不告诉任何人。
+                    messages = [];
+                    console.error('[loadData] chatMessages 读取失败且无可用备份，本次以空列表启动，不会自动覆盖已有存储');
+                    _logRecoveryEvent('no_backup_available_on_read_failure', {});
+                    showNotification('聊天记录暂时加载失败，请稍后刷新重试；本次未对已保存的数据做任何修改', 'error', 8000);
+                }
+            }
+        } else {
+            // 读取本身是成功的，只是结果确实是 null/空——这才是真正"没有数据"的情况
+            messages = [];
         }
 
         if (savedBgGallery) {
@@ -773,6 +804,92 @@ window.deleteAnniversaryItem = function(id) {
         if (typeof playSound === 'function') playSound('anniversary');
     }
 };
+
+// ─── 应急备份诊断日志（静默写入，不打扰用户；会跟着云端同步一起传，方便远程排查）───
+const _RECOVERY_LOG_KEY = () => (typeof getStorageKey === 'function' ? getStorageKey('_recoveryLog') : (window.APP_PREFIX || 'CHAT_APP_V3_') + '_recoveryLog');
+function _logRecoveryEvent(event, detail) {
+    try {
+        const entry = { ts: Date.now(), event, detail: detail || {} };
+        // 用 localStorage 同步写（IndexedDB 是异步的，出问题的时候可能来不及等它），
+        // 下次 saveData 时机再统一搬进 localforage 里跟着云端同步走。
+        const raw = localStorage.getItem('_recoveryLogBuffer');
+        const arr = raw ? JSON.parse(raw) : [];
+        arr.push(entry);
+        // 最多留 50 条，避免无限增长
+        while (arr.length > 50) arr.shift();
+        localStorage.setItem('_recoveryLogBuffer', JSON.stringify(arr));
+    } catch (e) { /* 日志失败不影响主流程 */ }
+}
+// 把 localStorage 里缓冲的日志搬进 localforage（会被 cloud-sync-engine 当作文字数据自动同步走）
+async function _flushRecoveryLog() {
+    try {
+        const raw = localStorage.getItem('_recoveryLogBuffer');
+        if (!raw) return;
+        const buffered = JSON.parse(raw);
+        if (!Array.isArray(buffered) || buffered.length === 0) return;
+        const key = _RECOVERY_LOG_KEY();
+        const existing = (await localforage.getItem(key)) || [];
+        const merged = existing.concat(buffered);
+        while (merged.length > 50) merged.shift();
+        await localforage.setItem(key, merged);
+        localStorage.removeItem('_recoveryLogBuffer');
+    } catch (e) { console.warn('[recovery-log] flush 失败', e); }
+}
+
+/**
+ * 合并"备份/主存储读取异常时"恢复出来的消息到当前消息数组里——只增不删。
+ * 用"时间戳+发送者+文本/图片摘要"做去重 key，而不是覆盖，这样不管什么时候触发，
+ * 最坏情况也就是极小概率出现一条重复气泡，绝不会比原来更少。
+ */
+function _mergeBackupMessages(current, backupMsgs) {
+    const currentArr = Array.isArray(current) ? current : [];
+    const backupArr = Array.isArray(backupMsgs) ? backupMsgs : [];
+    const seen = new Set();
+    const keyOf = (m) => {
+        const t = (m.timestamp instanceof Date ? m.timestamp.getTime() : new Date(m.timestamp).getTime()) || 0;
+        return t + '|' + (m.sender || '') + '|' + (m.text || '') + '|' + (m.image ? 'img' : '') + '|' + (m.voice ? 'voice' : '');
+    };
+    currentArr.forEach(m => seen.add(keyOf(m)));
+    const merged = currentArr.slice();
+    let addedCount = 0;
+    backupArr.forEach(m => {
+        const normalized = { ...m, timestamp: m.timestamp instanceof Date ? m.timestamp : new Date(m.timestamp) };
+        const k = keyOf(normalized);
+        if (!seen.has(k)) {
+            seen.add(k);
+            merged.push(normalized);
+            addedCount++;
+        }
+    });
+    merged.sort((a, b) => (a.timestamp?.getTime?.() || 0) - (b.timestamp?.getTime?.() || 0));
+    return { merged, addedCount };
+}
+
+// 出现"保存失败"的地方统一调用这个：顺手查一下 iOS 存储空间使用情况，
+// 一起记进诊断日志——如果是存储空间紧张导致的静默写入失败，这样就能直接看到数字，不用再猜。
+async function _logStorageWriteFailure(context, error) {
+    try {
+        let quotaInfo = {};
+        if (navigator.storage && typeof navigator.storage.estimate === 'function') {
+            try {
+                const est = await navigator.storage.estimate();
+                quotaInfo = {
+                    usageMB: est.usage ? +(est.usage / 1024 / 1024).toFixed(1) : null,
+                    quotaMB: est.quota ? +(est.quota / 1024 / 1024).toFixed(1) : null,
+                    usagePct: (est.usage && est.quota) ? +((est.usage / est.quota) * 100).toFixed(1) : null
+                };
+            } catch (e) { quotaInfo = { estimateFailed: true }; }
+        } else {
+            quotaInfo = { estimateUnsupported: true };
+        }
+        _logRecoveryEvent('storage_write_failed', {
+            context,
+            error: String(error && error.message || error || ''),
+            ...quotaInfo
+        });
+        console.warn(`[storage] ${context} 写入失败，当前存储用量：${quotaInfo.usageMB}MB / ${quotaInfo.quotaMB}MB (${quotaInfo.usagePct}%)`, error);
+    } catch (e) { /* 诊断本身失败也不影响主流程 */ }
+}
 
 const _BACKUP_PREFIX = 'BACKUP_V1_';
 function _backupCriticalData() {

@@ -51,6 +51,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         updateLoader('正在读取记忆存档...', '40%');
         await safeAwait(loadData());
+        // 把本次启动过程中缓冲的诊断日志（如果有）搬进 localforage，
+        // 这样会跟着云端同步引擎一起自动传走，不需要用户做任何操作。
+        try { if (typeof _flushRecoveryLog === 'function') await _flushRecoveryLog(); } catch (e) {}
+        // 顺手记一次当前存储空间用量（不等出错才查），方便远程判断是不是存储快满了
+        try {
+            if (navigator.storage && typeof navigator.storage.estimate === 'function' && typeof _logRecoveryEvent === 'function') {
+                const est = await navigator.storage.estimate();
+                if (est.usage && est.quota) {
+                    _logRecoveryEvent('storage_snapshot_on_boot', {
+                        usageMB: +(est.usage / 1024 / 1024).toFixed(1),
+                        quotaMB: +(est.quota / 1024 / 1024).toFixed(1),
+                        usagePct: +((est.usage / est.quota) * 100).toFixed(1)
+                    });
+                    if (typeof _flushRecoveryLog === 'function') await _flushRecoveryLog();
+                }
+            }
+        } catch (e) {}
 
         updateLoader('正在渲染我们的世界...', '70%');
         
@@ -105,19 +122,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             } else if (document.visibilityState === 'visible') {
                 try {
                     const backup = typeof _tryRecoverFromBackup === 'function' ? _tryRecoverFromBackup() : null;
-                    if (backup && Array.isArray(backup.messages) && backup.messages.length > 0 && Array.isArray(messages) && backup.messages.length > messages.length) {
-                        console.warn('[visibilitychange] 检测到备份消息比当前更多，自动尝试恢复');
-                        try {
-                            messages = backup.messages.map(m => ({
-                                ...m,
-                                timestamp: new Date(m.timestamp)
-                            }));
-                            if (backup.settings) Object.assign(settings, backup.settings);
+                    if (backup && Array.isArray(backup.messages) && backup.messages.length > 0 && Array.isArray(messages)) {
+                        // 用"合并"代替"条数比大小就整体覆盖"——条数不是可靠的新旧判断依据
+                        // （比如陪伴模式期间的临时清理就可能让条数正常变少）。合并只补齐当前缺的，
+                        // 已有的内容一律不动，所以就算判断"该不该合并"这一步出错，也不会丢东西。
+                        const { merged, addedCount } = typeof _mergeBackupMessages === 'function'
+                            ? _mergeBackupMessages(messages, backup.messages)
+                            : { merged: messages, addedCount: 0 };
+                        if (addedCount > 0) {
+                            console.warn(`[visibilitychange] 从本地应急备份合并了 ${addedCount} 条当前没有的消息`);
+                            messages = merged;
                             if (typeof updateUI === 'function') updateUI();
                             if (typeof throttledSaveData === 'function') throttledSaveData();
-                            showNotification('已自动恢复本地临时备份内容', 'warning', 3500);
-                        } catch (restoreErr) {
-                            console.warn('[visibilitychange] 自动恢复失败，保留当前页面内容:', restoreErr);
+                            if (typeof _logRecoveryEvent === 'function') _logRecoveryEvent('visibilitychange_merge_restore', { addedCount });
+                            showNotification(`检测到 ${addedCount} 条消息此前未同步，已自动补全`, 'warning', 3500);
                         }
                     }
                 } catch (e) {
@@ -166,15 +184,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (err) {
         console.error('严重初始化错误:', err);
         try {
+            if (typeof _logRecoveryEvent === 'function') _logRecoveryEvent('init_fatal_error', { message: String(err && err.message || err) });
             const backup = typeof _tryRecoverFromBackup === 'function' ? _tryRecoverFromBackup() : null;
             if (backup && Array.isArray(backup.messages) && backup.messages.length > 0) {
-                messages = backup.messages.map(m => ({
-                    ...m,
-                    timestamp: new Date(m.timestamp)
-                }));
-                if (backup.settings) Object.assign(settings, backup.settings);
+                // 初始化都报错了，这里 messages 变量本身状态不可信（可能是默认空值，也可能是
+                // 加载到一半的半成品），所以只做"合并补全"，不做整体替换——
+                // 就算 messages 此时其实是对的，合并也不会把它变差。
+                const currentSafe = Array.isArray(messages) ? messages : [];
+                const { merged, addedCount } = typeof _mergeBackupMessages === 'function'
+                    ? _mergeBackupMessages(currentSafe, backup.messages)
+                    : { merged: currentSafe.concat(backup.messages.map(m => ({ ...m, timestamp: new Date(m.timestamp) }))), addedCount: backup.messages.length };
+                messages = merged;
+                if (backup.settings) Object.assign(settings, backup.settings || {});
                 if (typeof updateUI === 'function') updateUI();
-                showNotification('初始化异常，已使用本地紧急备份恢复', 'warning', 5000);
+                showNotification(`初始化异常，已从本地紧急备份合并补全 ${addedCount} 条消息，建议稍后手动导出一份完整备份核对`, 'warning', 7000);
             }
         } catch (recoverErr) {
             console.warn('[boot] 初始化失败后的恢复也失败:', recoverErr);

@@ -161,6 +161,7 @@
             await localforage.setItem(key, toSave);
         } catch (e) {
             console.warn('[companion] 保存数据失败', e);
+            if (typeof _logStorageWriteFailure === 'function') _logStorageWriteFailure('companionData_save', e);
         }
     }
 
