@@ -158,7 +158,11 @@
                 }
             });
 
-            await localforage.setItem(key, toSave);
+            if (typeof _withIdbRetry === 'function') {
+                await _withIdbRetry(() => localforage.setItem(key, toSave), 'companionData_save');
+            } else {
+                await localforage.setItem(key, toSave);
+            }
         } catch (e) {
             console.warn('[companion] 保存数据失败', e);
             if (typeof _logStorageWriteFailure === 'function') _logStorageWriteFailure('companionData_save', e);

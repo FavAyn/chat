@@ -121,7 +121,9 @@
                     }
                 }
             }
-            await localforage.setItem(getKey(), _diaryEntries);
+            await (typeof _withIdbRetry === 'function'
+                ? _withIdbRetry(() => localforage.setItem(getKey(), _diaryEntries), 'companionDiary_save')
+                : localforage.setItem(getKey(), _diaryEntries));
         } catch (e) {
             console.warn('[companion-diary] save failed:', e);
             if (typeof _logStorageWriteFailure === 'function') _logStorageWriteFailure('companionDiary_save', e);

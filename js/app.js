@@ -152,6 +152,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             try { _backupCriticalData(); } catch (e) {}
         });
 
+        // 加密应急备份的触发频率：以前只在切后台/关闭页面那一刻才存一份"备胎"，
+        // 万一 IndexedDB 连接在两次触发之间断掉，这段时间说的话就没有任何备份能兜住。
+        // 改成每 20 秒顺手存一份，这样断线时最多损失 20 秒，而不是几十分钟。
+        setInterval(() => {
+            try { _backupCriticalData(); } catch (e) {}
+        }, 20 * 1000);
+
         setInterval(() => {
             saveData().catch(e => console.warn('[autoBackup] 定时保存失败:', e));
         }, 3 * 60 * 1000);

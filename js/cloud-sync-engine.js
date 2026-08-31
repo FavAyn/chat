@@ -144,7 +144,9 @@
         // 是否有恢复流程正在进行（暂停所有同步）
         restoreInProgress: false,
         // 是否有梦角选择器正在等待用户操作（本地是空的，未选择前不允许同步覆盖云端）
-        awaitingRestoreChoice: false
+        awaitingRestoreChoice: false,
+        // 上次成功同步时，indexedDB 部分收集到的 key 数量——用来判断"这次是不是明显缩水了"
+        lastSuccessfulKeyCount: 0
     };
 
     // 防抖延迟（数据变化后）
@@ -222,12 +224,16 @@
 
         // localforage
         try {
-            var keys = await localforage.keys();
+            var keys = await (typeof _withIdbRetry === 'function'
+                ? _withIdbRetry(() => localforage.keys(), 'cloudSync_keys')
+                : localforage.keys());
             for (var i = 0; i < keys.length; i++) {
                 var k = keys[i];
                 if (!_isTextKey(k)) continue;
                 try {
-                    var v = await localforage.getItem(k);
+                    var v = await (typeof _withIdbRetry === 'function'
+                        ? _withIdbRetry(() => localforage.getItem(k), 'cloudSync_getItem_' + k)
+                        : localforage.getItem(k));
                     if (v === undefined) continue;
                     // 阶段三B 修：backgroundGallery 本地 value 现在是全尺寸 base64
                     // 同步时把 value 换成 cloudUrl（oss:// 引用），让换设备恢复时能从云端下载
@@ -445,6 +451,12 @@
             }
         } catch (e) {
             console.warn('[cloud-sync-engine] 遍历 localforage 失败', e);
+            if (typeof _logRecoveryEvent === 'function') {
+                _logRecoveryEvent('cloudSync_collect_failed', { error: String(e && e.message || e) });
+            }
+            // 标记这次收集不完整——_doSync 会据此决定要不要跳过这次上传，
+            // 避免用一份读取失败、可能残缺的数据覆盖云端已有的好数据。
+            payload._collectIncomplete = true;
         }
 
         // localStorage
@@ -715,6 +727,26 @@
         _notify();
         try {
             var payload = await _collectTextData();
+            var collectedKeyCount = Object.keys(payload.indexedDB || {}).length;
+
+            // 保险：读取过程中标记为"不完整"，或者这次收集到的 key 数量比上次成功同步时
+            // 明显少了一半以上（且上次确实有过正常数据），就认为这次数据很可能是残缺的，
+            // 宁可跳过这次上传，也不要用一份坏数据覆盖云端原本好好的备份。
+            var suspiciouslySmall = _state.lastSuccessfulKeyCount > 0
+                && collectedKeyCount < _state.lastSuccessfulKeyCount * 0.5;
+            if (payload._collectIncomplete || suspiciouslySmall) {
+                delete payload._collectIncomplete;
+                console.warn('[cloud-sync-engine] 本次数据收集可能不完整（' + collectedKeyCount + ' / 上次 ' + _state.lastSuccessfulKeyCount + '），跳过本次上传，避免覆盖云端好数据');
+                if (typeof _logRecoveryEvent === 'function') {
+                    _logRecoveryEvent('cloudSync_upload_skipped_suspicious', {
+                        collectedKeyCount, lastSuccessfulKeyCount: _state.lastSuccessfulKeyCount
+                    });
+                }
+                _state.lastSyncOk = false;
+                _state.lastError = '本地数据读取不完整，已跳过本次上传（不会覆盖云端）';
+                return;
+            }
+
             var jsonString = JSON.stringify(payload);
             await _uploadToOSS(jsonString);
             // 顺便更新云端 index（登记当前梦角）— 失败不影响主同步
@@ -725,6 +757,7 @@
             _state.lastError = null;
             _state.consecutiveFailures = 0;
             _state.failAlertShown = false; // 成功后重置，下次失败可以再提示
+            _state.lastSuccessfulKeyCount = collectedKeyCount;
         } catch (e) {
             _state.lastSyncOk = false;
             _state.lastError = String(e && e.message || e);

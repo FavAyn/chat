@@ -865,6 +865,57 @@ function _mergeBackupMessages(current, backupMsgs) {
     return { merged, addedCount };
 }
 
+// ─── IndexedDB 连接偶发断开（iOS Safari 已知问题）自动重试 + 兜底提示 ───
+const _IDB_LOST_MSG = 'connection to indexed database server lost';
+function _isIdbLostError(e) {
+    const msg = String((e && e.message) || e || '').toLowerCase();
+    return msg.indexOf(_IDB_LOST_MSG) !== -1 || msg.indexOf('indexeddb') !== -1 && msg.indexOf('lost') !== -1;
+}
+let _idbDeadBannerShown = false;
+function _showIdbDeadBanner() {
+    if (_idbDeadBannerShown) return;
+    _idbDeadBannerShown = true;
+    try {
+        const bar = document.createElement('div');
+        bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99998;background:#d9363e;color:#fff;'
+            + 'padding:10px 14px;font-size:14px;display:flex;align-items:center;justify-content:space-between;'
+            + 'gap:10px;box-shadow:0 2px 8px rgba(0,0,0,0.25);';
+        bar.innerHTML = '<span>存储连接异常，本地保存可能暂时失败，建议立即刷新</span>';
+        const btn = document.createElement('button');
+        btn.textContent = '刷新';
+        btn.style.cssText = 'flex-shrink:0;background:#fff;color:#d9363e;border:none;border-radius:6px;'
+            + 'padding:6px 14px;font-weight:600;';
+        btn.onclick = () => location.reload();
+        bar.appendChild(btn);
+        document.body.appendChild(bar);
+    } catch (e) {}
+}
+/**
+ * 包一层自动重试：专门处理"IndexedDB 连接偶发断开"这个 iOS Safari 已知问题。
+ * 断线往往几秒内会自己恢复，所以先重试几次再放弃；重试也不行才提示用户刷新，
+ * 而不是像以前一样悄悄失败、用户毫无察觉地继续用，等半天才发现东西没存上。
+ */
+async function _withIdbRetry(fn, context, maxRetries = 3) {
+    let lastErr = null;
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+            return await fn();
+        } catch (e) {
+            lastErr = e;
+            if (!_isIdbLostError(e)) throw e; // 不是这个已知问题，原样抛出，不瞎重试
+            console.warn(`[idb-retry] ${context} 第 ${attempt + 1} 次遇到连接断开，${attempt < maxRetries ? '稍后重试' : '已达重试上限'}`);
+            if (attempt < maxRetries) {
+                await new Promise(r => setTimeout(r, 800 * (attempt + 1)));
+            }
+        }
+    }
+    if (typeof _logRecoveryEvent === 'function') {
+        _logRecoveryEvent('idb_connection_lost_unrecovered', { context, error: String(lastErr && lastErr.message || lastErr) });
+    }
+    _showIdbDeadBanner();
+    throw lastErr;
+}
+
 // 出现"保存失败"的地方统一调用这个：顺手查一下 iOS 存储空间使用情况，
 // 一起记进诊断日志——如果是存储空间紧张导致的静默写入失败，这样就能直接看到数字，不用再猜。
 async function _logStorageWriteFailure(context, error) {
@@ -983,7 +1034,7 @@ const saveData = async () => {
     }
 
     const results = await Promise.allSettled(promises.map(p => {
-        try { return p.val(); }
+        try { return _withIdbRetry(p.val, `saveData_${p.key}`); }
         catch(e) { return Promise.reject(e); }
     }));
 

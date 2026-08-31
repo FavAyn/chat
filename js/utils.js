@@ -442,6 +442,9 @@ async function exportAllData() {
         }
     } catch (e) {
         console.error('全量导出失败:', e);
+        if (typeof _logRecoveryEvent === 'function') {
+            _logRecoveryEvent('export_all_failed', { error: String(e && e.message || e) });
+        }
         showNotification('全量导出失败，请重试', 'error');
     }
 }

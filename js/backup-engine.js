@@ -206,15 +206,24 @@
             inclThemes: true, inclDg: true, inclStickers: false
         };
         var lfData = {};
-        var keys = await localforage.keys();
+        var keys = await (typeof _withIdbRetry === 'function'
+            ? _withIdbRetry(() => localforage.keys(), 'backupExport_keys')
+            : localforage.keys());
         for (var i = 0; i < keys.length; i++) {
             var key = keys[i];
             if (shouldSkipKeyGroupChat(key, flags)) continue;
             try {
-                var rawVal = await localforage.getItem(key);
+                var rawVal = await (typeof _withIdbRetry === 'function'
+                    ? _withIdbRetry(() => localforage.getItem(key), 'backupExport_getItem_' + key)
+                    : localforage.getItem(key));
                 if (rawVal === null || rawVal === undefined) continue;
                 lfData[key] = deepCloneJsonSafe(rawVal);
-            } catch (e) { console.warn('[backup] 读取失败', key, e); }
+            } catch (e) {
+                console.warn('[backup] 读取失败', key, e);
+                if (typeof _logRecoveryEvent === 'function') {
+                    _logRecoveryEvent('backupExport_key_read_failed', { key, error: String(e && e.message || e) });
+                }
+            }
         }
         var lsData = {};
         for (var j = 0; j < localStorage.length; j++) {
