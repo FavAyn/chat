@@ -134,8 +134,12 @@
       var dueBtn = actBtn('mm-due' + (it.due ? ' on' : ''), '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2.5"/><path d="M4 9.5h16M8.5 3v4M15.5 3v4"/></svg>', '截止日期', function () { setDue(it); });
       var shr = actBtn('mm-share', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 3.5L10 13.5"/><path d="M21.5 3.5L15 21l-5-7.5-7.5-4z"/></svg>', '发给TA', function () {
         var dueTxt = it.due ? '（' + it.due + ' 截止）' : '';
-        if (typeof window.chatAddIn === 'function') { try { window.chatAddIn('备忘 · ' + (it.t || '') + dueTxt); toastMini('已发送'); } catch (e) {} }
-        else toastMini('聊天未就绪');
+        var text = '备忘 · ' + (it.t || '') + dueTxt;
+        // 优先用 milk 的 sendMessage（主发送接口），fallback chatAddIn
+        if (typeof sendMessage === 'function') { try { sendMessage(text); toastMini('已发送'); return; } catch (e) {} }
+        if (typeof window.sendMessage === 'function') { try { window.sendMessage(text); toastMini('已发送'); return; } catch (e) {} }
+        if (typeof window.chatAddIn === 'function') { try { window.chatAddIn(text); toastMini('已发送'); return; } catch (e) {} }
+        toastMini('聊天未就绪');
       });
       var pin = actBtn('mm-pin' + (it.pin ? ' on' : ''), '📌', it.pin ? '取消置顶' : '置顶', function () {
         var cur = items.find(function (x) { return x.id === it.id; }); if (!cur) return;

@@ -102,11 +102,11 @@
 
   // ---- 颜色系统：每种花可选颜色（按真实色彩）+ 滤镜实现 emoji 变色 ----
   var COLORS = {
-    red:   { n: '红', filter: 'sepia(1) saturate(6) hue-rotate(-20deg) brightness(1.05)' },
-    pink:  { n: '粉', filter: 'sepia(1) saturate(4) hue-rotate(-60deg) brightness(1.2)' },
-    white: { n: '白', filter: 'sepia(0.2) saturate(0) brightness(1.65)' },
-    yellow:{ n: '黄', filter: 'sepia(1) saturate(5) hue-rotate(5deg) brightness(1.25)' },
-    orange:{ n: '橙', filter: 'sepia(1) saturate(5) hue-rotate(-5deg) brightness(1.1)' },
+    red:   { n: '红', filter: 'sepia(1) saturate(7) hue-rotate(-6deg) brightness(0.98)' },
+    pink:  { n: '粉', filter: 'sepia(1) saturate(4) hue-rotate(-45deg) brightness(1.18)' },
+    white: { n: '白', filter: 'sepia(0.55) saturate(0.5) brightness(1.55)' },
+    yellow:{ n: '黄', filter: 'sepia(1) saturate(6) hue-rotate(-3deg) brightness(1.4)' },
+    orange:{ n: '橙', filter: 'sepia(1) saturate(6) hue-rotate(14deg) brightness(1.15)' },
     purple:{ n: '紫', filter: 'sepia(1) saturate(5) hue-rotate(215deg) brightness(1.05)' },
     blue:  { n: '蓝', filter: 'sepia(1) saturate(5) hue-rotate(175deg) brightness(1.05)' },
     cyan:  { n: '青', filter: 'sepia(1) saturate(5) hue-rotate(140deg) brightness(1.05)' },
@@ -120,7 +120,7 @@
     lavender: ['purple', 'blue'],
     daisy: ['white', 'yellow', 'pink'],
     sakura: ['pink', 'white'],
-    hibiscus: ['red', 'pink', 'orange', 'yellow'],
+    hibiscus: ['red', 'pink', 'orange', 'yellow', 'white'],
     lotus: ['pink', 'white'],
     clover: ['green'],
     lily: ['white', 'pink', 'yellow', 'orange'],
@@ -128,7 +128,7 @@
     orchid: ['purple', 'white', 'pink'],
     maple: ['red', 'orange', 'yellow'],
     jasmine: ['white'],
-    iris: ['purple', 'blue', 'yellow'],
+    iris: ['purple', 'blue', 'yellow', 'white'],
     bamboo: ['green'],
     flameRose: ['red', 'orange', 'pink'],
     blueRose: ['blue', 'cyan'],
@@ -479,8 +479,8 @@
       var wl = waterLvl(plot);
       if (!need) items.push({ key: 'water', label: '浇水', emoji: '💧', sub: wl > 0 ? '土壤还润' : '该浇水了' });
       if (si && si.bloomed && !si.wilted) items.push({ key: 'harvest', label: '收获', emoji: '✂️', sub: '成熟了，收进花库' });
-      // 只有枯萎/凋谢的花才能铲除，活着的花不允许铲除
-      if ((si && si.wilted) || (need && need.dried)) items.push({ key: 'clear', label: '铲除', emoji: '🧹', sub: '清理这块地重新种' });
+      // 种了花就能铲除（活花/枯萎均可）
+      items.push({ key: 'clear', label: '铲除', emoji: '🧹', sub: '清理这块地重新种' });
     }
     openChoice(title, items, function (key) {
       if (key === 'plant') { plantDialog(idx); return; }
