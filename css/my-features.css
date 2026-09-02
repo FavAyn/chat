@@ -1,0 +1,249 @@
+/* ==========================================================================
+ * 新增功能样式：档案 / 备忘录 / 花园（milk 适配）
+ * 全部复用 milk 的主题变量（--primary-bg/--secondary-bg/--text-primary/
+ * --text-secondary/--border-color/--accent-color/--radius 等），浅深色自动适配。
+ * ========================================================================== */
+
+/* =====================================================================
+ * 档案容器（TA的档案 + 我的档案）
+ * ===================================================================== */
+#myarc-modal .modal-content.myarc-content{
+    max-width:560px;padding:0;border-radius:var(--radius,18px);overflow:hidden;
+    max-height:88vh;display:flex;flex-direction:column;
+}
+.myarc-content{color:var(--text-primary,#1a1a1a);background:var(--primary-bg,#f9f9f9);}
+.myarc-input{
+    width:100%;box-sizing:border-box;border:1px solid var(--border-color,#ebebeb);
+    border-radius:var(--radius-xs,10px);background:var(--secondary-bg,#fff);
+    color:var(--text-primary,#1a1a1a);padding:10px 12px;font-size:14px;font-family:inherit;
+    outline:none;transition:border-color .2s;
+}
+.myarc-input:focus{border-color:var(--accent-color,#c5a47e);}
+.myarc-ta{min-height:74px;resize:vertical;line-height:1.55;}
+.myarc-top{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border-color,#eee);background:var(--secondary-bg,#fff);flex-shrink:0;}
+.myarc-back{width:34px;height:34px;border:none;border-radius:50%;background:transparent;color:var(--text-primary,#1a1a1a);font-size:15px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+.myarc-back:hover{background:rgba(0,0,0,.06);}
+html[data-theme="dark"] .myarc-back:hover{background:rgba(255,255,255,.08);}
+.myarc-title{font-size:16px;font-weight:700;}
+.myarc-tabs{display:flex;background:var(--secondary-bg,#fff);border-bottom:1px solid var(--border-color,#eee);}
+.myarc-tab{flex:1;padding:12px 0;border:none;background:transparent;color:var(--text-secondary,#7a7a7a);font-size:14px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;transition:color .2s,border-color .2s;}
+.myarc-tab.on{color:var(--accent-color,#c5a47e);border-bottom-color:var(--accent-color,#c5a47e);}
+.myarc-hero{padding:18px 18px 6px;text-align:center;}
+.myarc-hero-name{font-size:22px;font-weight:800;letter-spacing:1px;}
+.myarc-hero-sub{font-size:12px;color:var(--text-secondary,#7a7a7a);margin-top:4px;}
+.myarc-prog{padding:8px 18px 4px;}
+.myarc-prog-label{display:flex;justify-content:space-between;font-size:12px;color:var(--text-secondary,#7a7a7a);margin-bottom:5px;}
+.myarc-prog-bar{height:6px;border-radius:3px;background:var(--border-color,#eee);overflow:hidden;}
+.myarc-prog-bar span{display:block;height:100%;background:var(--accent-color,#c5a47e);border-radius:3px;transition:width .3s;}
+.myarc-grid{padding:10px 14px 18px;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+.myarc-cell{position:relative;padding:14px 12px;border:1px solid var(--border-color,#ebebeb);border-radius:var(--radius,18px);background:var(--secondary-bg,#fff);cursor:pointer;transition:transform .15s,border-color .2s,box-shadow .2s;}
+.myarc-cell:hover{transform:translateY(-2px);border-color:var(--accent-color,#c5a47e);box-shadow:0 6px 14px rgba(0,0,0,.06);}
+.myarc-cell i{font-size:20px;color:var(--accent-color,#c5a47e);}
+.myarc-cell-title{font-size:15px;font-weight:700;margin-top:8px;}
+.myarc-cell-sub{font-size:11px;color:var(--text-secondary,#7a7a7a);margin-top:2px;line-height:1.4;}
+.myarc-cell-dot{position:absolute;top:8px;right:8px;font-size:10px;padding:2px 6px;border-radius:20px;background:var(--border-color,#eee);color:var(--text-secondary,#7a7a7a);}
+.myarc-cell-dot.on{background:var(--accent-color,#c5a47e);color:#fff;}
+.myarc-scroll{flex:1;overflow-y:auto;padding:14px;-webkit-overflow-scrolling:touch;}
+.myarc-sect-name{font-size:12px;font-weight:700;color:var(--text-secondary,#7a7a7a);margin:14px 0 8px;letter-spacing:1px;}
+.myarc-field{display:block;margin-bottom:12px;}
+.myarc-f-label{display:block;font-size:13px;font-weight:600;margin-bottom:5px;color:var(--text-primary,#1a1a1a);}
+.myarc-group{margin-bottom:16px;}
+.myarc-g-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.myarc-g-head span{font-size:14px;font-weight:700;}
+.myarc-add{width:30px;height:30px;border:1.5px dashed var(--accent-color,#c5a47e);border-radius:50%;background:transparent;color:var(--accent-color,#c5a47e);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+.myarc-add:hover{background:var(--accent-color,#c5a47e);color:#fff;}
+.myarc-empty{font-size:12px;color:var(--text-secondary,#9a9a9a);padding:8px 0;font-style:italic;}
+.myarc-chips{display:flex;flex-wrap:wrap;gap:8px;}
+.myarc-chip{position:relative;display:inline-flex;align-items:center;gap:4px;padding:7px 30px 7px 12px;border-radius:20px;font-size:13px;background:var(--secondary-bg,#fff);border:1px solid var(--border-color,#ebebeb);color:var(--text-primary,#1a1a1a);}
+.myarc-chip-x{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:18px;height:18px;border:none;border-radius:50%;background:var(--border-color,#eee);color:var(--text-secondary,#7a7a7a);cursor:pointer;font-size:11px;line-height:1;display:flex;align-items:center;justify-content:center;}
+.myarc-chip-x:hover{background:#e6e6e6;color:#000;}
+html[data-theme="dark"] .myarc-chip-x:hover{background:#3a3a3a;color:#fff;}
+.myarc-mask{position:fixed;inset:0;z-index:2100;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);}
+.myarc-inlay{width:100%;max-width:340px;background:var(--secondary-bg,#fff);border-radius:var(--radius,18px);padding:18px;box-shadow:0 12px 40px rgba(0,0,0,.25);}
+.myarc-inlay-title{font-size:16px;font-weight:700;margin-bottom:12px;color:var(--text-primary,#1a1a1a);}
+.myarc-inlay-input{margin-bottom:14px;}
+.myarc-inlay-btns{display:flex;gap:10px;}
+.myarc-inlay-btn{flex:1;padding:11px 0;border:none;border-radius:var(--radius-xs,10px);font-size:14px;font-weight:600;cursor:pointer;transition:filter .2s;}
+.myarc-inlay-cancel{background:var(--border-color,#eee);color:var(--text-primary,#1a1a1a);}
+.myarc-inlay-ok{background:var(--accent-color,#c5a47e);color:#fff;}
+.myarc-inlay-cancel:hover,.myarc-inlay-ok:hover{filter:brightness(.96);}
+html[data-theme="dark"] .myarc-inlay-cancel{background:#333;color:#eee;}
+
+/* =====================================================================
+ * 备忘录
+ * ===================================================================== */
+#memo-modal .modal-content.memo-content{
+    max-width:560px;padding:0;border-radius:var(--radius,18px);overflow:hidden;
+    max-height:88vh;display:flex;flex-direction:column;
+}
+.memo-content{color:var(--text-primary,#1a1a1a);background:var(--primary-bg,#f9f9f9);}
+.memo-top{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border-color,#eee);background:var(--secondary-bg,#fff);flex-shrink:0;}
+.memo-back{width:34px;height:34px;border:none;border-radius:50%;background:transparent;color:var(--text-primary,#1a1a1a);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+.memo-back:hover{background:rgba(0,0,0,.06);}
+html[data-theme="dark"] .memo-back:hover{background:rgba(255,255,255,.08);}
+.memo-title{font-size:16px;font-weight:700;flex:1;}
+.memo-top-btns{display:flex;gap:8px;}
+.memo-send-toggle{border:1px solid var(--border-color,#eee);border-radius:20px;background:var(--secondary-bg,#fff);color:var(--text-secondary,#7a7a7a);font-size:12px;padding:6px 12px;cursor:pointer;transition:all .2s;}
+.memo-send-toggle.on{background:var(--accent-color,#c5a47e);color:#fff;border-color:var(--accent-color,#c5a47e);}
+.memo-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;}
+.memo-input-row{display:flex;gap:8px;margin-bottom:12px;}
+.memo-inp{flex:1;box-sizing:border-box;border:1px solid var(--border-color,#ebebeb);border-radius:var(--radius-xs,10px);background:var(--secondary-bg,#fff);color:var(--text-primary,#1a1a1a);padding:10px 12px;font-size:14px;outline:none;}
+.memo-inp:focus{border-color:var(--accent-color,#c5a47e);}
+.memo-add{border:none;border-radius:var(--radius-xs,10px);background:var(--accent-color,#c5a47e);color:#fff;font-size:14px;font-weight:600;padding:10px 16px;cursor:pointer;}
+.memo-add:hover{filter:brightness(.96);}
+.memo-msg{font-size:12px;color:var(--accent-color,#c5a47e);min-height:16px;margin-bottom:8px;opacity:0;transition:opacity .2s;text-align:center;}
+.memo-msg.show{opacity:1;}
+.memo-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.memo-count{font-size:12px;color:var(--text-secondary,#7a7a7a);}
+.memo-cleardone{border:none;background:transparent;color:var(--text-secondary,#7a7a7a);font-size:12px;cursor:pointer;}
+.memo-cleardone:hover{color:var(--text-primary,#1a1a1a);}
+.memo-list{flex:1;overflow-y:auto;}
+.memo-item{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--border-color,#ebebeb);border-radius:var(--radius-sm,14px);background:var(--secondary-bg,#fff);margin-bottom:8px;}
+.memo-item.urgent{border-color:var(--accent-color,#c5a47e);}
+.memo-item.done{opacity:.55;}
+.mm-check{flex-shrink:0;width:24px;height:24px;border:1.5px solid var(--border-color,#ccc);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:transparent;transition:all .2s;}
+.memo-item.done .mm-check{background:var(--accent-color,#c5a47e);border-color:var(--accent-color,#c5a47e);color:#fff;}
+.mm-check svg{width:13px;height:13px;}
+.mm-main{flex:1;min-width:0;}
+.mm-text{font-size:14px;color:var(--text-primary,#1a1a1a);word-break:break-word;cursor:pointer;}
+.memo-item.done .mm-text{text-decoration:line-through;}
+.mm-time{font-size:11px;color:var(--text-secondary,#9a9a9a);margin-top:3px;}
+.mm-time.due-overdue{color:#ff5963;font-weight:600;}
+.mm-time.due-today{color:#ffa429;font-weight:600;}
+.mm-act{flex-shrink:0;width:28px;height:28px;border:none;background:transparent;color:var(--text-secondary,#9a9a9a);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:8px;font-size:14px;}
+.mm-act:hover{background:rgba(0,0,0,.05);}
+html[data-theme="dark"] .mm-act:hover{background:rgba(255,255,255,.08);}
+.mm-act.on{color:var(--accent-color,#c5a47e);}
+.mm-act svg{width:16px;height:16px;}
+.memo-empty{text-align:center;color:var(--text-secondary,#9a9a9a);font-size:13px;line-height:1.9;padding:30px 20px;}
+
+/* =====================================================================
+ * 花园（情侣空间 pill）
+ * ===================================================================== */
+#cs-panel-garden{background:radial-gradient(circle at 50% 0%,rgba(var(--accent-color-rgb,197,164,126),0.10),transparent 60%),var(--primary-bg,#f9f9f9);}
+.garden-shell{padding:12px 14px 24px;}
+.garden-topbar{display:flex;align-items:baseline;gap:10px;padding:4px 2px 10px;}
+.garden-tb-title{font-size:20px;font-weight:800;}
+.garden-tb-sub{font-size:12px;color:var(--text-secondary,#7a7a7a);}
+.garden-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.garden-lv{display:flex;align-items:center;gap:8px;}
+.garden-level{font-size:14px;font-weight:700;color:var(--accent-color,#c5a47e);}
+.garden-exp{font-size:12px;color:var(--text-secondary,#7a7a7a);}
+.garden-wx{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-secondary,#7a7a7a);}
+.garden-wx-ico{font-size:17px;}
+.garden-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px;}
+.garden-btn{border:none;border-radius:var(--radius-xs,10px);background:var(--secondary-bg,#fff);color:var(--text-primary,#1a1a1a);font-size:13px;font-weight:600;padding:11px 0;cursor:pointer;box-shadow:var(--shadow,0 4px 12px rgba(0,0,0,.04));transition:transform .1s,filter .15s;}
+.garden-btn:hover{filter:brightness(.97);}
+.garden-btn:active{transform:scale(.97);}
+.garden-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.garden-plot{position:relative;aspect-ratio:1;border:1px solid var(--border-color,#e8e2d8);border-radius:var(--radius-sm,14px);background:linear-gradient(180deg,var(--secondary-bg,#fff),rgba(var(--accent-color-rgb,197,164,126),0.05));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;overflow:hidden;transition:transform .12s,border-color .2s;}
+.garden-plot:hover{transform:translateY(-2px);}
+.garden-plot.empty{border-style:dashed;opacity:.85;}
+.garden-plot.bloomed{border-color:var(--accent-color,#c5a47e);}
+.garden-plot.watered{background:linear-gradient(180deg,#eaf4ef,rgba(var(--accent-color-rgb,197,164,126),0.08));}
+.garden-plant-emoji{font-size:30px;line-height:1;}
+.garden-plant-name{font-size:11px;font-weight:600;color:var(--text-primary,#1a1a1a);}
+.garden-plant-stage{font-size:10px;color:var(--text-secondary,#7a7a7a);}
+.garden-plant-stage.wilted-stage{color:#c0849c;font-weight:600;}
+.garden-plot-empty-txt{font-size:11px;color:var(--text-secondary,#a9a49a);}
+.garden-grow-bar{width:70%;height:4px;border-radius:2px;background:var(--border-color,#eee);overflow:hidden;}
+.garden-grow-fill{height:100%;background:var(--accent-color,#7fbf7a);border-radius:2px;transition:width .3s;}
+.garden-water-bar{width:70%;height:3px;border-radius:2px;background:var(--border-color,#e8eef0);overflow:hidden;}
+.garden-water-fill{height:100%;background:#5aa9d6;border-radius:2px;transition:width .3s;}
+.garden-sec-t{font-size:13px;font-weight:700;color:var(--text-primary,#1a1a1a);padding:6px 2px 8px;}
+.garden-log{background:var(--secondary-bg,#fff);border-radius:var(--radius-sm,14px);padding:10px 12px;margin-bottom:14px;}
+.garden-log-empty{font-size:12px;color:var(--text-secondary,#9a9a9a);padding:6px 0;font-style:italic;}
+.garden-log-item{font-size:12px;color:var(--text-primary,#1a1a1a);padding:3px 0;line-height:1.5;}
+.garden-log-t{color:var(--text-secondary,#9a9a9a);margin-right:6px;font-size:11px;}
+.garden-log-item b{color:var(--accent-color,#c5a47e);font-weight:700;}
+.garden-report-card,.garden-stats-card{background:var(--secondary-bg,#fff);border-radius:var(--radius-sm,14px);padding:12px 14px;margin-bottom:14px;}
+.garden-rep-line{font-size:13px;color:var(--text-primary,#1a1a1a);padding:4px 0;line-height:1.6;}
+.garden-rep-line b{color:var(--accent-color,#c5a47e);font-weight:700;}
+.garden-stats-row{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:13px;}
+.garden-stats-row span{width:44px;color:var(--text-secondary,#7a7a7a);}
+.garden-stats-row.ta span{width:44px;color:var(--accent-color,#c5a47e);}
+.garden-stats-row b{min-width:26px;text-align:right;}
+.garden-stats-bar{flex:1;height:8px;border-radius:4px;background:var(--border-color,#eee);overflow:hidden;}
+.garden-stats-bar span{display:block;height:100%;background:var(--accent-color,#c5a47e);border-radius:4px;transition:width .4s;}
+.garden-dex{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.garden-dex-cell{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px;border:1px solid var(--border-color,#eee);border-radius:var(--radius-xs,10px);background:var(--secondary-bg,#fff);cursor:pointer;position:relative;}
+.garden-dex-cell.got{border-color:var(--accent-color,#c5a47e);}
+.garden-dex-emoji{font-size:24px;line-height:1;opacity:.4;filter:grayscale(1);}
+.garden-dex-cell.got .garden-dex-emoji{opacity:1;filter:none;}
+.garden-dex-name{font-size:10px;color:var(--text-secondary,#7a7a7a);}
+.garden-dex-cell.got .garden-dex-name{color:var(--text-primary,#1a1a1a);font-weight:600;}
+.garden-dex-rare{position:absolute;top:2px;right:2px;font-size:9px;background:var(--accent-color,#c5a47e);color:#fff;padding:1px 4px;border-radius:8px;font-style:italic;}
+
+/* garden 子面板（报告/统计） */
+.garden-subpanel{position:fixed;inset:0;z-index:1800;background:var(--primary-bg,#f9f9f9);display:none;flex-direction:column;}
+.garden-sub-hd{display:flex;align-items:center;gap:10px;padding:14px;border-bottom:1px solid var(--border-color,#eee);background:var(--secondary-bg,#fff);font-size:16px;font-weight:700;}
+.garden-sub-back{border:none;background:transparent;color:var(--text-primary,#1a1a1a);font-size:14px;cursor:pointer;padding:6px 10px;border-radius:8px;}
+.garden-sub-back:hover{background:rgba(0,0,0,.05);}
+.garden-sub-body{flex:1;overflow-y:auto;padding:16px;}
+.garden-stat-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border-color,#eee);font-size:14px;}
+.garden-stat-row b{color:var(--accent-color,#c5a47e);min-width:34px;text-align:center;}
+.garden-toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.75);color:#fff;padding:10px 18px;border-radius:20px;font-size:13px;z-index:3000;opacity:0;pointer-events:none;transition:opacity .2s;}
+.garden-toast.show{opacity:1;}
+/* 花色系统 */
+.garden-plot{transition:transform .12s,border-color .2s;}
+.garden-plant-emoji{transition:filter .3s ease,transform .3s ease;display:inline-block;}
+.garden-plant-emoji.tint{will-change:filter;}
+.garden-col-name{font-size:9px;color:var(--text-secondary,#9a9a9a);margin-left:2px;font-weight:400;}
+.garden-plot.recolor-target{border-color:var(--accent-color,#c5a47e);box-shadow:0 0 0 2px var(--accent-color,#c5a47e);}
+
+/* =====================================================================
+ * TA 随机回复（聊天设置·节奏→随机发送）
+ * ===================================================================== */
+.ta-random-tip{font-size:12px;color:var(--text-secondary,#7a7a7a);padding:6px 2px 2px;line-height:1.5;}
+.ta-random-mode-row{margin-top:6px;align-items:center;gap:8px;}
+.ta-random-mode-btn{border:1px solid var(--border-color,#eee);border-radius:20px;background:var(--secondary-bg,#fff);color:var(--text-secondary,#7a7a7a);font-size:13px;padding:7px 14px;cursor:pointer;transition:all .2s;}
+.ta-random-mode-btn.active{background:var(--accent-color,#c5a47e);color:#fff;border-color:var(--accent-color,#c5a47e);}
+html[data-theme="dark"] .ta-random-mode-btn{background:#333;color:#ccc;border-color:#444;}
+html[data-theme="dark"] .ta-random-mode-btn.active{background:var(--accent-color,#c5a47e);color:#fff;border-color:var(--accent-color,#c5a47e);}
+
+/* =====================================================================
+ * 花园 pill 图标：与其他空间入口一致（mask 剪影 + 背景色，统一风格）
+ * 花朵形状，替代原先的 emoji 🏡
+ * ===================================================================== */
+#csp-garden .cs-pill-icon{ 
+    -webkit-mask-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3c1.7 1.7 2.6 3.3 2.6 4.9C14.6 9.9 13.5 11.4 12 12.5 10.5 11.4 9.4 9.9 9.4 7.9 9.4 6.3 10.3 4.7 12 3z"/><path d="M12 21c-4.4-2.4-7-5.3-7-8.3 0-1.6.6-2.9 1.6-3.8C7.8 8 9.2 7.6 12 10v.1c.3-2.5 1.7-2.9 2.8-2.4 1 .4 1.7 1.5 1.7 3 0 1.1-.4 2.2-1.1 3.3C14.4 15.9 13.4 18.5 12 21z"/><path d="M12 21c-.2-.9-.4-1.8-.8-2.7C10 16 8.9 14.3 8.9 12.5 8.9 11.3 9.4 10.3 10.4 9.7c1-.6 1.2-.3 3.2.8C12.7 11.6 12 13 11.4 14.6 11 15.6 10.9 17 12 21z"/></svg>');
+    mask-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3c1.7 1.7 2.6 3.3 2.6 4.9C14.6 9.9 13.5 11.4 12 12.5 10.5 11.4 9.4 9.9 9.4 7.9 9.4 6.3 10.3 4.7 12 3z"/><path d="M12 21c-4.4-2.4-7-5.3-7-8.3 0-1.6.6-2.9 1.6-3.8C7.8 8 9.2 7.6 12 10v.1c.3-2.5 1.7-2.9 2.8-2.4 1 .4 1.7 1.5 1.7 3 0 1.1-.4 2.2-1.1 3.3C14.4 15.9 13.4 18.5 12 21z"/><path d="M12 21c-.2-.9-.4-1.8-.8-2.7C10 16 8.9 14.3 8.9 12.5 8.9 11.3 9.4 10.3 10.4 9.7c1-.6 1.2-.3 3.2.8C12.7 11.6 12 13 11.4 14.6 11 15.6 10.9 17 12 21z"/></svg>');
+}
+/* 未选中态：跟随其他图标用 text-secondary 色 */
+#csp-garden .cs-pill-icon { background-color: var(--text-secondary); }
+
+
+
+
+/* =====================================================================
+ * 花园·种植/换色 选择弹层（替代 prompt 输入，电脑/手机都统一）
+ * ===================================================================== */
+.garden-choice-mask{position:fixed;inset:0;z-index:2600;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(3px);}
+.garden-choice-mask.show{display:flex;}
+.garden-choice{width:100%;max-width:480px;background:var(--secondary-bg,#fff);border-radius:20px 20px 0 0;padding:14px 16px max(16px,env(safe-area-inset-bottom,0));box-shadow:0 -8px 40px rgba(0,0,0,.2);max-height:78vh;display:flex;flex-direction:column;}
+.garden-choice-hd{display:flex;align-items:center;gap:10px;padding-bottom:10px;border-bottom:1px solid var(--border-color,#eee);flex-shrink:0;}
+.garden-choice-title{flex:1;font-size:16px;font-weight:700;}
+.garden-choice-close{width:32px;height:32px;border:none;border-radius:50%;background:var(--border-color,#eee);color:var(--text-primary,#1a1a1a);cursor:pointer;font-size:14px;}
+.garden-choice-list{flex:1;overflow-y:auto;padding:10px 0;-webkit-overflow-scrolling:touch;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.garden-choice-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;border:1px solid var(--border-color,#eee);border-radius:14px;background:var(--primary-bg,#f9f9f9);cursor:pointer;transition:border-color .2s,transform .1s;}
+.garden-choice-item:hover{border-color:var(--accent-color,#c5a47e);}
+.garden-choice-item:active{transform:scale(.96);}
+.garden-choice-item .gci-emoji{font-size:30px;line-height:1;}
+.garden-choice-item .gci-name{font-size:12px;color:var(--text-primary,#1a1a1a);font-weight:600;}
+.garden-choice-item .gci-sub{font-size:10px;color:var(--text-secondary,#7a7a7a);}
+.garden-choice-item.locked{opacity:.4;pointer-events:none;filter:grayscale(1);}
+.garden-choice-item .gci-rare{font-size:9px;background:var(--accent-color,#c5a47e);color:#fff;padding:1px 5px;border-radius:8px;}
+
+/* =====================================================================
+ * 花园入口未读红点 + 操作记录面板
+ * ===================================================================== */
+.garden-pill-badge{
+    position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;
+    background:#ff4d4f;border:1.5px solid var(--primary-bg,#fff);display:none;pointer-events:none;
+}
+/* 操作记录面板条目 */
+.garden-ops-item{display:flex;align-items:baseline;gap:8px;padding:7px 0;border-bottom:1px solid var(--border-color,#eee);font-size:13px;color:var(--text-primary,#1a1a1a);line-height:1.5;}
+.garden-ops-item b{font-weight:700;white-space:nowrap;}
+.garden-ops-item.me b{color:var(--text-primary,#1a1a1a);}
+.garden-ops-item.ta b{color:var(--accent-color,#c5a47e);}
+.garden-ops-t{font-size:11px;color:var(--text-secondary,#9a9a9a);white-space:nowrap;flex-shrink:0;}

@@ -7,8 +7,8 @@ let _momentsDataLoaded = false; // 只有loadMomentsData()成功跑完一次才�
 
 const _M_STORAGE_KEY  = 'momentsData';
 const _M_COOLDOWN_KEY = 'partnerLetterNextTime';
-const _M_CD_MIN  = 48 * 60 * 60 * 1000;
-const _M_CD_MAX  = 96 * 60 * 60 * 1000;
+const _M_CD_MIN  = 24 * 60 * 60 * 1000;
+const _M_CD_MAX  = 48 * 60 * 60 * 1000;
 const _M_PROB    = 0.40;
 const _M_DLY_MIN = 5  * 60 * 1000;
 const _M_DLY_MAX = 20 * 60 * 1000;
@@ -629,6 +629,7 @@ window.csSwitchTab=function(tab){
     if(tab==='mood'&&typeof window._moodInit==='function')window._moodInit();
     if(tab==='ann'&&typeof window._annInit==='function')window._annInit();
     if(tab==='cinema'&&typeof window._cinemaInit==='function')window._cinemaInit();
+    if(tab==='garden'&&typeof window._gardenInit==='function')window._gardenInit();
 
     // 切离 feed 后兜底清除 feed title（IntersectionObserver 可能异步残留）
     if(tab!=='feed'){

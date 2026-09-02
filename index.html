@@ -29,6 +29,7 @@
     <link rel="stylesheet" href="css/my-sticker-groups.css">
     <link rel="stylesheet" href="css/global-msg-banner.css">
     <link rel="stylesheet" href="css/survey.css">
+    <link rel="stylesheet" href="css/my-features.css">
 
     <style id="css-live-preview-style"></style>
     <style>
@@ -566,6 +567,7 @@ html[data-theme="dark"] #cs-transition-overlay{background:radial-gradient(circle
                 <button class="cs-pill"             id="csp-mood"    onclick="csSwitchTab('mood')"   title="心情手账"><span class="cs-pill-icon"></span></button>
                 <button class="cs-pill"             id="csp-ann"     onclick="csSwitchTab('ann')"    title="纪念日"><span class="cs-pill-icon"></span></button>
                 <button class="cs-pill"             id="csp-cinema"  onclick="csSwitchTab('cinema')" title="电影院"><span class="cs-pill-icon"></span></button>
+                <button class="cs-pill"             id="csp-garden"  onclick="csSwitchTab('garden')" title="花园"><span class="cs-pill-icon"></span></button>
             </div>
         </div>
     </div>
@@ -678,6 +680,10 @@ html[data-theme="dark"] #cs-transition-overlay{background:radial-gradient(circle
         </div>
         <div class="cs-panel" id="cs-panel-cinema">
             <!-- 内容由 cinema.js 动态填充 -->
+        </div>
+
+        <div class="cs-panel" id="cs-panel-garden">
+            <!-- 内容由 garden.js 动态填充 -->
         </div>
 
         <!-- 档案页（全屏覆盖，陪伴日记风格）
@@ -2035,6 +2041,33 @@ html[data-theme="dark"] #cs-transition-overlay{background:radial-gradient(circle
                         </div>
                     </div>
 
+                    <p class="cs-group-label" style="margin-top:4px;">随机发送</p>
+                    <div class="cs-card">
+                        <div class="setting-pill-row" id="ta-random-toggle">
+                            <span class="setting-pill-icon"><i class="fas fa-dice"></i></span>
+                            <span class="setting-pill-label">TA 随机回复我</span>
+                            <div class="setting-pill-switch"><div class="setting-pill-knob"></div></div>
+                        </div>
+                        <div id="ta-random-control" style="display:none;">
+                            <div class="ta-random-tip">两个时间档二选一（发过后重新随机，立即生效）</div>
+                            <div class="cs-slider-row">
+                                <span class="cs-slider-label">分钟档</span>
+                                <input type="range" min="1" max="30" step="1" value="5" class="font-size-slider" id="ta-random-min-slider">
+                                <span class="cs-slider-val" id="ta-random-min-value">5分钟</span>
+                            </div>
+                            <div class="cs-slider-row">
+                                <span class="cs-slider-label">小时档</span>
+                                <input type="range" min="1" max="12" step="1" value="2" class="font-size-slider" id="ta-random-hour-slider">
+                                <span class="cs-slider-val" id="ta-random-hour-value">2小时</span>
+                            </div>
+                            <div class="cs-slider-row ta-random-mode-row">
+                                <span class="cs-slider-label">当前档</span>
+                                <button class="ta-random-mode-btn" id="ta-random-mode-min">用分钟档</button>
+                                <button class="ta-random-mode-btn" id="ta-random-mode-hour">用小时档</button>
+                            </div>
+                        </div>
+                    </div>
+
                     <p class="cs-group-label" style="margin-top:4px;">消息节奏</p>
                     <div class="cs-card">
                         <div class="setting-pill-row" id="emoji-mix-toggle">
@@ -2381,6 +2414,12 @@ html[data-theme="dark"] #cs-transition-overlay{background:radial-gradient(circle
                     <div class="settings-item" id="envelope-function" style="display:none;">
                         <i class="fas fa-envelope-open-text"></i><span>信箱</span>
                     </div>
+                    <div class="settings-item" id="myarc-function">
+                        <i class="fas fa-book-open"></i><span>档案</span>
+                    </div>
+                    <div class="settings-item" id="memo-function">
+                        <i class="fas fa-list-check"></i><span>备忘录</span>
+                    </div>
                 </div>
             </div>
 
@@ -2504,6 +2543,7 @@ html[data-theme="dark"] #cs-transition-overlay{background:radial-gradient(circle
                 <div id="survey-fav-filter-bar"></div>
                 <div class="survey-toolbar-actions">
                     <button type="button" class="survey-icon-btn" id="survey-trash-btn" title="回收站"><i class="fas fa-trash"></i></button>
+                    <button type="button" class="survey-icon-btn" id="survey-askme-btn" title="请梦角问我问卷"><i class="fas fa-comment-dots"></i></button>
                     <button type="button" class="survey-icon-btn" id="survey-add-btn" title="创建问卷"><i class="fas fa-plus"></i></button>
                 </div>
             </div>
@@ -3625,6 +3665,9 @@ html[data-theme="dark"] #cs-transition-overlay{background:radial-gradient(circle
     <script src="js/features/cinema.js"></script>
     <script src="js/features/global-msg-banner.js"></script>
     <script src="js/features/survey.js"></script>
+    <script src="js/features/my-arc.js"></script>
+    <script src="js/features/memo.js"></script>
+    <script src="js/features/garden.js"></script>
 <!-- 相册图片详情（全屏） -->
 <div id="al-view-detail" style="display:none;position:fixed;inset:0;z-index:6000;background:#000;flex-direction:column;">
     <div class="al-detail-topbar">

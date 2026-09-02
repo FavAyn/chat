@@ -90,7 +90,9 @@
         'favAudio_',
         // 头像（配置了云端、迁移过的话是 oss:// 引用，体积小可以同步；有 sanitize 过滤本地 base64，
         // 没迁移过的老数据不会硬塞大 base64 进同步包，换设备后跑一下"迁移到云端"补上就行）
-        'partnerAvatar', 'myAvatar'
+        'partnerAvatar', 'myAvatar',
+        // 新增：档案（TA的档案+我的档案）、花园（种子/浇水/收获/图鉴/花库/送花）
+        'myarc', 'gardenData'
     ];
 
     // 媒体类键（大 base64，不走文字同步 payload）
@@ -121,7 +123,9 @@
         'pokeSym_my_custom', 'pokeSym_partner_custom',
         'disabledStickerItems',
         'dg_custom_data', 'dg_status_pool', 'weekly_fortune', 'daily_fortune',
-        'voiceTtsConfig'
+        'voiceTtsConfig',
+        // 新增：档案/备忘录/花园 的本地快照（也经 localforage 主存，这里双保险兜底）
+        'MYARC_PROFILE_V1', 'MYMEMO_ITEMS_V1', 'MYMEMO_SEND_V1', 'GARDEN_DATA_V1'
     ];
     var TEXT_LS_PREFIXES = ['customWeather_'];
 

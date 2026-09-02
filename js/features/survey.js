@@ -132,7 +132,7 @@
         if (!Array.isArray(_data.bank) || !_data.bank.length) _seedBuiltinBank();
         _ensureDefaultBankGroup();
         if (!_data.askMeTrigger) {
-            _data.askMeTrigger = { nextCheckAt: Date.now() + _randDays(5, 8), missStreak: 0 };
+            _data.askMeTrigger = { nextCheckAt: Date.now() + _randDays(2, 3), missStreak: 0 };
         }
         _loaded = true;
         _syncDelaySlidersUI();
@@ -614,14 +614,13 @@
 
     // ══ 反向问卷（梦角问我）：触发引擎 + 抽题 + 提交回答 ══════════
     //
-    // 触发概率：5-8天随机检查一次；上次触发过 → 这次50%；上次没中 → 这次80%；
-    // 再没中 → 这次100%必中。中了就把 missStreak 清零，重新从50%开始下一轮计时。
+    // 触发概率：2-3天随机检查一次；主动触发概率固定 60%。
     function _checkAskMeTrigger() {
         if (!_loaded) return;
         var t = _data.askMeTrigger;
         if (!t || Date.now() < t.nextCheckAt) return;
 
-        var prob = t.missStreak === 0 ? 0.5 : (t.missStreak === 1 ? 0.8 : 1);
+        var prob = 0.6; // 主动触发概率固定 60%
         var hit = Math.random() < prob;
         if (hit) {
             var batch = _createAskMeBatch();
@@ -631,11 +630,11 @@
                 _refreshOpenViews();
             }
             // 题库里没有可用题目（比如全被隐藏了）就当这次白抽，missStreak 不变，
-            // 照样往下重新排一次 5-8 天后的检查时间，不会卡住
+            // 照样往下重新排一次 2-3 天后的检查时间，不会卡住
         } else {
             t.missStreak++;
         }
-        t.nextCheckAt = Date.now() + _randDays(5, 8);
+        t.nextCheckAt = Date.now() + _randDays(2, 3);
         _save();
     }
 
@@ -2056,6 +2055,22 @@
         if (addBtn) addBtn.onclick = function () { _openCreateModal(); };
         var trashBtn = document.getElementById('survey-trash-btn');
         if (trashBtn) trashBtn.onclick = _openTrashModal;
+        // 请梦角问我问卷：30% 概率梦角拒绝，70% 概率梦角答应并生成一批"梦角问我"
+        var askMeBtn = document.getElementById('survey-askme-btn');
+        if (askMeBtn) askMeBtn.onclick = function () {
+            var nm = _partnerName();
+            if (Math.random() < 0.3) {
+                if (typeof showNotification === 'function') showNotification(nm + '想了想说：这次先不问你啦，下次吧～', 'info');
+                return;
+            }
+            var batch = _createAskMeBatch();
+            if (!batch) {
+                if (typeof showNotification === 'function') showNotification('题库里没有可用的题目了', 'warning');
+                return;
+            }
+            _refreshOpenViews();
+            if (typeof showNotification === 'function') showNotification(nm + '出好了一份问卷，等你来答哦', 'success');
+        };
 
         var detailBackBtn = document.getElementById('survey-detail-back');
         if (detailBackBtn) detailBackBtn.onclick = _closeDetailModal;

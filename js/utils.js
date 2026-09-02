@@ -560,6 +560,24 @@ async function importAllData(file) {
                 label: '电影院',
                 indexedDBNeedles: ['_cinemaAppt', '_cinemaWatchlist', '_cinemaHistory', '_cinemaNego', '_cinemaPartnerInvite'],
                 localStorageNeedles: []
+            },
+            {
+                id: 'myarc',
+                label: '档案（TA的档案 / 我的档案）',
+                indexedDBNeedles: ['myarc'],
+                localStorageNeedles: ['MYARC_PROFILE_V1']
+            },
+            {
+                id: 'memo',
+                label: '备忘录',
+                indexedDBNeedles: [],
+                localStorageNeedles: ['MYMEMO_ITEMS_V1', 'MYMEMO_SEND_V1']
+            },
+            {
+                id: 'garden',
+                label: '花园',
+                indexedDBNeedles: ['gardenData'],
+                localStorageNeedles: ['GARDEN_DATA_V1']
             }
         ];
 

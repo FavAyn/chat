@@ -263,6 +263,11 @@ function loadMoreFuture() {
                 partnerAvatarShape: 'circle',
 autoSendEnabled: false,
 autoSendInterval: 5,
+        // 随机主动回复：开关键 + 模式(min|hour) + 两个滑动条值（二选一互斥）
+        taRandomOn: false,
+        taRandomMode: 'min',
+        taRandomMin: 5,
+        taRandomHour: 2,
         allowReadNoReply: false, 
         readNoReplyChance: 0.2,
         combineReplyCards: false,
@@ -723,6 +728,7 @@ const loadData = async () => {
         setTimeout(() => {
             applyAllAvatarFrames();
             manageAutoSendTimer(); 
+            manageTaRandomTimer(); 
             checkEnvelopeStatus(); 
             if (typeof checkMomentsStatus === 'function') checkMomentsStatus();
             updateUI();
@@ -1229,6 +1235,98 @@ function manageAutoSendTimer() {
     }
 }
 
+// ===== TA 随机回复（随机间隔，二选一档） =====
+let taRandomTimer = null;
+function manageTaRandomTimer() {
+    if (taRandomTimer) { clearTimeout(taRandomTimer); taRandomTimer = null; }
+    if (!settings.taRandomOn) return;
+    scheduleTaRandom();
+}
+function scheduleTaRandom() {
+    if (taRandomTimer) clearTimeout(taRandomTimer);
+    // 随机间隔：按档位取值（发过后重新随机）
+    let ms;
+    if (settings.taRandomMode === 'hour') {
+        const v = Math.max(1, Math.min(12, parseInt(settings.taRandomHour, 10) || 2));
+        ms = (1 + Math.random() * (v - 1)) * 3600 * 1000; // 1~v 小时
+    } else {
+        const v = Math.max(1, Math.min(30, parseInt(settings.taRandomMin, 10) || 5));
+        ms = (1 + Math.random() * (v - 1)) * 60 * 1000;   // 1~v 分钟
+    }
+    taRandomTimer = setTimeout(tickTaRandom, ms);
+}
+function tickTaRandom() {
+    taRandomTimer = null;
+    if (!settings.taRandomOn) return;
+    if (document.body.classList.contains('batch-favorite-mode')) { scheduleTaRandom(); return; }
+    // 发消息（读自动回复语料）；随机混入 TA 拍一拍
+    try {
+        if (Math.random() < 0.3 && typeof window._triggerPartnerPoke === 'function') {
+            window._triggerPartnerPoke();
+        } else if (typeof window.simulateReply === 'function') {
+            window.simulateReply();
+        }
+    } catch (e) { console.warn('[taRandom] ', e); }
+    scheduleTaRandom(); // 发完重新随机
+}
+function taRandomPokeEnabled() { return true; }
+
+// ===== 随机发送 UI 开关/滑块绑定（自包含，不依赖 listeners.js） =====
+function setupTaRandomControls() {
+    const toggle = document.querySelector('#ta-random-toggle');
+    const control = document.querySelector('#ta-random-control');
+    const minSlider = document.querySelector('#ta-random-min-slider');
+    const minVal = document.querySelector('#ta-random-min-value');
+    const hourSlider = document.querySelector('#ta-random-hour-slider');
+    const hourVal = document.querySelector('#ta-random-hour-value');
+    const miBtn = document.querySelector('#ta-random-mode-min');
+    const hrBtn = document.querySelector('#ta-random-mode-hour');
+
+    const syncControl = () => {
+        if (control) control.style.display = settings.taRandomOn ? 'block' : 'none';
+        if (minSlider) minSlider.value = settings.taRandomMin;
+        if (minVal) minVal.textContent = settings.taRandomMin + '分钟';
+        if (hourSlider) hourSlider.value = settings.taRandomHour;
+        if (hourVal) hourVal.textContent = settings.taRandomHour + '小时';
+        if (miBtn) miBtn.classList.toggle('active', settings.taRandomMode === 'min');
+        if (hrBtn) hrBtn.classList.toggle('active', settings.taRandomMode === 'hour');
+    };
+    if (toggle) toggle.addEventListener('click', () => {
+        settings.taRandomOn = !settings.taRandomOn;
+        if (typeof throttledSaveData === 'function') throttledSaveData();
+        if (typeof updateUI === 'function') updateUI();
+        syncControl();
+        manageTaRandomTimer();
+    });
+    if (minSlider) minSlider.addEventListener('input', () => {
+        settings.taRandomMin = parseInt(minSlider.value, 10) || 5;
+        if (minVal) minVal.textContent = settings.taRandomMin + '分钟';
+        if (typeof throttledSaveData === 'function') throttledSaveData();
+        if (settings.taRandomOn) manageTaRandomTimer();
+    });
+    if (hourSlider) hourSlider.addEventListener('input', () => {
+        settings.taRandomHour = parseInt(hourSlider.value, 10) || 2;
+        if (hourVal) hourVal.textContent = settings.taRandomHour + '小时';
+        if (typeof throttledSaveData === 'function') throttledSaveData();
+        if (settings.taRandomOn) manageTaRandomTimer();
+    });
+    if (miBtn) miBtn.addEventListener('click', () => {
+        settings.taRandomMode = 'min';
+        if (typeof throttledSaveData === 'function') throttledSaveData();
+        syncControl();
+        if (settings.taRandomOn) manageTaRandomTimer();
+    });
+    if (hrBtn) hrBtn.addEventListener('click', () => {
+        settings.taRandomMode = 'hour';
+        if (typeof throttledSaveData === 'function') throttledSaveData();
+        syncControl();
+        if (settings.taRandomOn) manageTaRandomTimer();
+    });
+    syncControl();
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setupTaRandomControls);
+else setupTaRandomControls();
+
         const updateUI = () => {
             const isCustomTheme = settings.colorTheme.startsWith('custom-');
             if (isCustomTheme) {
@@ -1291,7 +1389,8 @@ function manageAutoSendTimer() {
                 '#typing-indicator-toggle': 'typingIndicatorEnabled',
                 '#read-no-reply-toggle': 'allowReadNoReply',
                 '#emoji-mix-toggle': 'emojiMixEnabled',
-                '#auto-send-toggle': 'autoSendEnabled'
+                '#auto-send-toggle': 'autoSendEnabled',
+                '#ta-random-toggle': 'taRandomOn'
             };
             for (const [sel, prop] of Object.entries(_pillSyncMap)) {
                 const el = document.querySelector(sel);

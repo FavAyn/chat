@@ -2513,8 +2513,8 @@
     function _scheduleNextPartnerInviteCheck() {
         if (_partnerInviteTimer) { clearTimeout(_partnerInviteTimer); _partnerInviteTimer = null; }
         if (!_partnerInviteState) {
-            // 第一次用，从现在起 5~7 天后才第一次检查，不是装上就立刻查
-            _partnerInviteState = { nextCheckAt: Date.now() + (5 + Math.random() * 2) * 86400000, missedCount: 0 };
+            // 第一次用，从现在起 3~6 天后才第一次检查，不是装上就立刻查
+            _partnerInviteState = { nextCheckAt: Date.now() + (3 + Math.random() * 3) * 86400000, missedCount: 0 };
             _partnerInviteSave();
         }
         var delay = _partnerInviteState.nextCheckAt - Date.now();
@@ -2527,14 +2527,14 @@
         // 只有在"没有约定、没有协商中"的时候才可能触发，不然会跟用户自己发的邀请撞车
         var canInvite = _uiState === 'empty' && !(_negoState && _negoState.active);
         var missed = _partnerInviteState.missedCount || 0;
-        var prob = missed >= 2 ? 1 : 0.7;
+        var prob = missed >= 2 ? 1 : 0.6; // 主动邀请概率 60%（连续 2 次没触发则第 3 次必发）
         if (canInvite && Math.random() < prob) {
             _startPartnerInvite(); // 永远会成功（心愿单/历史都空时用固定文案兜底）
             _partnerInviteState.missedCount = 0;
         } else {
             _partnerInviteState.missedCount = missed + 1;
         }
-        var days = 5 + Math.random() * 2;
+        var days = 3 + Math.random() * 3;
         _partnerInviteState.nextCheckAt = Date.now() + days * 86400000;
         _partnerInviteSave();
         _scheduleNextPartnerInviteCheck();
