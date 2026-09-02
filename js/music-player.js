@@ -33,6 +33,8 @@
   var floatEn = true;
   var floatMin = false;             // 悬浮窗是否收起成小圆钮
   var inited = false;
+  var batchMode = false;            // 音乐库是否处于批量管理模式
+  var batchSel = {};                // 批量勾选：{ id: true }
 
   // 全局 DOM
   var $ = function (id) { return document.getElementById(id); };
@@ -399,7 +401,8 @@
   function next(byEnd) {
     if (!library.length) return;
     var idx = libView.findIndex(function (m) { return m.id === currentId; });
-    if (mode === 'single') { loadAndPlay(idx, true); return; }
+    // 单曲循环：仅自动播完(byEnd)时循环当前；手动点"下一曲"则切到列表下一首
+    if (mode === 'single' && byEnd) { loadAndPlay(idx, true); return; }
     var target;
     if (mode === 'shuffle') target = Math.floor(Math.random() * libView.length);
     else target = (idx + 1) % libView.length;
@@ -429,9 +432,16 @@
     // 页面里如果有播放按钮
     var bplay = $('mf-big-play'); if (bplay) bplay.innerHTML = isPlaying ? inlineSvg('pause') : inlineSvg('play');
   }
+  // 更新悬浮窗上的播放模式图标：顺序=循环图标，单曲=循环图标+数字1，随机=随机
   function updateModeBtn() {
-    var icons = { list: 'icon-line', single: 'icon-1', shuffle: 'icon-shuffle' };
-    // 简单用文字/图标切换
+    var ico = $('mf-mode-ico'), one = $('mf-mode-1');
+    if (mode === 'shuffle') {
+      if (ico) ico.className = 'fas fa-random';
+      if (one) one.style.display = 'none';
+    } else {
+      if (ico) ico.className = 'fas fa-repeat';
+      if (one) one.style.display = (mode === 'single') ? 'inline' : 'none';
+    }
   }
   function skipToEnd(clear) {
     var a = initAudio();
@@ -459,7 +469,8 @@
           '<div class="mf-artist" id="mf-artist">—</div>' +
         '</div>' +
         '<div class="mf-actions">' +
-          '<button class="mf-btn" id="mf-mode" title="播放模式"><i class="fas fa-random"></i></button>' +
+          '<button class="mf-btn" id="mf-mode" title="播放模式"><span class="mf-mode-wrap"><i class="fas fa-repeat" id="mf-mode-ico"></i><b class="mf-mode-1" id="mf-mode-1" style="display:none">1</b></span></button>' +
+          '<button class="mf-btn" id="mf-list" title="歌曲列表"><i class="fas fa-list"></i></button>' +
           '<button class="mf-btn" id="mf-prev" title="上一首"><i class="fas fa-backward"></i></button>' +
           '<button class="mf-btn main" id="mf-play" title="播放/暂停">' +
             '<span id="mf-play-ico">' + inlineSvg('play') + '</span>' +
@@ -476,6 +487,15 @@
     document.body.appendChild(f);
     floatBox = f;
 
+    // 歌曲列表弹窗
+    var listP = document.createElement('div');
+    listP.id = 'mfm-popup';
+    listP.className = 'mf-popup';
+    listP.innerHTML =
+      '<div class="mf-popup-head"><span class="mfp-title">歌曲列表</span><button class="mfp-close" id="mfm-close"><i class="fas fa-times"></i></button></div>' +
+      '<div class="mf-popup-list" id="mfm-list"></div>';
+    document.body.appendChild(listP);
+
     var min = document.createElement('button');
     min.id = 'milk-music-mini';
     min.title = '音乐';
@@ -488,22 +508,51 @@
     $('mf-next').onclick = function () { next(false); };
     $('mf-prev').onclick = prev;
     $('mf-mode').onclick = cycleMode;
-    $('mf-cover').onclick = openPage;
-    $('mf-min').onclick = function () { setFloatMin(true); };
-    $('mf-close').onclick = function () { stopAndHideFloat(); };
-    min.onclick = function () { setFloatMin(false); };
+    $('mf-cover').onclick = function () { if (!_supClick) openPage(); };
+    $('mf-list').onclick = function () { if (!_supClick) openFloatList(); };
+    $('mf-min').onclick = function (e) { if (!_supClick) setFloatMin(true, e); };
+    $('mf-close').onclick = function () { if (!_supClick) stopAndHideFloat(); };
+    $('mfm-close').onclick = function () { closeFloatList(); };
     $('mf-track').onclick = function (e) {
       var r = e.currentTarget.getBoundingClientRect();
       var x = e.clientX - r.left;
       var a = initAudio();
       if (a && a.duration) a.currentTime = (x / r.width) * a.duration;
     };
-    setupDrag(f, $('mf-drag'));
+    // 整个大浮窗都能拖动（除交互件外）；拖动后的点击被忽略
+    makeDraggable(f, f);
+    // 收起的小球：可拖动，拖动结束不触发"点它展开"，仅轻点才展开
+    makeDraggable(min, min);
+    min.addEventListener('click', function () { if (!_supClick) setFloatMin(false); });
+    updateModeBtn();
   }
-  function setupDrag(box, handle) {
+  // 打开/关闭悬浮窗歌曲列表
+  function openFloatList() {
+    var list = $('mfm-list'); if (!list) return;
+    var items = libView.length ? libView : library;
+    libView = items;
+    list.innerHTML = items.length
+      ? items.map(function (m, i) {
+          return '<div class="sm-song' + (m.id === currentId ? ' playing' : '') + '" data-i="' + i + '">' +
+            mIco(m) +
+            '<div class="sm-song-info"><div class="sm-song-name">' + esc(m.name) + '</div><div class="sm-song-sub">' + esc(m.artist) + '</div></div>' +
+            '<span class="sm-song-dur">' + (m.duration ? fmtDur(m.duration) : '--:--') + '</span>' +
+          '</div>';
+        }).join('')
+      : '<div style="text-align:center;padding:30px 10px;color:var(--text-secondary);font-size:12px">音乐库是空的</div>';
+    list.querySelectorAll('.sm-song').forEach(function (row) {
+      row.addEventListener('click', function () { loadAndPlay(Number(row.dataset.i), true); closeFloatList(); }); // 点歌后自动关闭列表
+    });
+    $('mfm-popup').classList.add('open');
+  }
+  function closeFloatList() { var p = $('mfm-popup'); if (p) p.classList.remove('open'); }
+  // 通用可拖动（box=被拖元素，handle=按住的区域，cb(moved,event) 回调）
+  function makeDraggable(box, handle, cb) {
     var isDrag = false, hasMoved = false, sx, sy, lx, ly;
     var start = function (e) {
-      if (e.target.closest('.mf-icon-btn') || e.target.closest('.mf-btn')) return;
+      // 不拦按钮/进度/封面点击（这些交给各自处理）；只拦交互件本身即可
+      if (e.target.closest('.mf-btn') || e.target.closest('.mf-icon-btn') || e.target.closest('.mf-track') || e.target.closest('.mf-cover')) return;
+      e._dragMoved = false;
       var ev = (e.type === 'touchstart') ? e.touches[0] : e;
       isDrag = true; hasMoved = false; sx = ev.clientX; sy = ev.clientY;
       var r = box.getBoundingClientRect(); lx = r.left; ly = r.top;
@@ -520,7 +569,12 @@
       box.style.left = nl + 'px'; box.style.top = nt + 'px';
       box.style.right = 'auto'; box.style.bottom = 'auto';
     };
-    var end = function () { isDrag = false; box.style.transition = ''; };
+    var end = function (e) {
+      if (!isDrag) return;
+      isDrag = false; box.style.transition = '';
+      if (hasMoved) { _supClick = true; setTimeout(function () { _supClick = false; }, 60); dragPos = { x: box.offsetLeft, y: box.offsetTop }; }
+      if (cb) cb(hasMoved, e);
+    };
     handle.addEventListener('mousedown', start);
     document.addEventListener('mousemove', move);
     document.addEventListener('mouseup', end);
@@ -528,14 +582,38 @@
     document.addEventListener('touchmove', move, { passive: false });
     document.addEventListener('touchend', end);
   }
-  function setFloatMin(min) {
+  // 记录一次真实的拖动（拖动结束后的紧跟 click 会借此被忽略）
+  var _supClick = false;
+  var dragPos = null;   // 记住悬浮窗/小球最后位置 {x,y}，放大缩小时都停在这
+  function applyDragPos(el) {
+    if (!dragPos) return;
+    placeAt(el, dragPos.x, dragPos.y);
+  }
+  // 把元素定位到屏幕 (x,y)，并限制在可视范围内
+  function placeAt(el, x, y) {
+    var w = el.offsetWidth || 44, h = el.offsetHeight || 44;
+    el.style.left = Math.max(0, Math.min(x, window.innerWidth - w)) + 'px';
+    el.style.top = Math.max(0, Math.min(y, window.innerHeight - h)) + 'px';
+    el.style.right = 'auto';
+    el.style.bottom = 'auto';
+  }
+  // min=true 缩小成小球；min=false 放大成浮窗。anchor 可选：点击事件里的坐标
+  function setFloatMin(min, anchor) {
     floatMin = min;
     if (min) {
-      if (floatBox) floatBox.classList.remove('mf-open');
-      if (miniBtn) miniBtn.classList.add('mm-open');
+      // 缩小：小球停在你点缩小(-)按钮的位置（以按钮中心为参照，球心对齐按钮中心）
+      if (anchor && anchor.clientX != null) {
+        dragPos = { x: anchor.clientX - 22, y: anchor.clientY - 22 };
+      } else if (floatBox && floatBox.classList.contains('mf-open')) {
+        var r = floatBox.getBoundingClientRect();
+        dragPos = { x: r.left, y: r.top };
+      }
+      if (floatBox) { floatBox.classList.remove('mf-open'); }
+      if (miniBtn) { miniBtn.classList.add('mm-open'); applyDragPos(miniBtn); }
     } else {
-      if (floatBox) floatBox.classList.add('mf-open');
-      if (miniBtn) miniBtn.classList.remove('mm-open');
+      // 放大：浮窗回到小球位置（跟视频通话同逻辑：从哪缩就回到哪）
+      if (floatBox) { floatBox.classList.add('mf-open'); applyDragPos(floatBox); }
+      if (miniBtn) { miniBtn.classList.remove('mm-open'); }
     }
   }
   function showFloat() {
@@ -545,9 +623,13 @@
   }
   function stopAndHideFloat() {
     if (audio) audio.pause();
+    hideFloat();
+    if (page) page.classList.remove('mp-open');
+  }
+  // 只隐藏悬浮窗（保留播放），供"进入陪伴页"等场景调用
+  function hideFloat() {
     if (floatBox) floatBox.classList.remove('mf-open');
     if (miniBtn) miniBtn.classList.remove('mm-open');
-    if (page) page.classList.remove('mp-open');
   }
   function updatePlayerUI() {
     var m = findTrack(currentId);
@@ -570,11 +652,11 @@
     p.id = 'milk-music-page';
     p.innerHTML =
       '<div class="music-page-bar">' +
+        '<button class="mp-btn mp-back" id="mp-close" title="返回"><i class="fas fa-chevron-left"></i></button>' +
         '<span class="mp-title"><i class="fas fa-music"></i>音乐</span>' +
         '<div class="music-page-actions">' +
           '<button class="mp-btn" id="mp-listen" title="邀请 TA 一起听"><i class="fas fa-headphones"></i></button>' +
           '<button class="mp-btn" id="mp-manage" title="管理"><i class="fas fa-sliders-h"></i></button>' +
-          '<button class="mp-btn" id="mp-close" title="关闭"><i class="fas fa-chevron-left"></i></button>' +
         '</div>' +
       '</div>' +
       '<div class="music-tabs">' +
@@ -631,15 +713,26 @@
         '<div class="music-search-wrap"><i class="fas fa-search"></i><input type="text" id="music-search-input" placeholder="搜索歌曲 / 歌手" value="' + esc(searchTerm) + '"></div>' +
         '<button class="music-head-btn primary" id="music-add-btn"><i class="fas fa-plus"></i>添加</button>' +
         '<button class="music-head-btn" id="music-import-btn" title="导入网易云歌单"><i class="fas fa-file-import"></i>导入</button>' +
+        '<button class="music-head-btn" id="music-batch-btn"><i class="fas fa-check-square"></i>' + (batchMode ? '退出批量' : '批量') + '</button>' +
       '</div>' +
       '<div class="music-sort-row">' +
-        '<span id="music-count">共 ' + list.length + ' 首</span>' +
+        '<span id="music-count">共 ' + list.length + ' 首' + (batchMode ? ' · 已选 ' + Object.keys(batchSel).length + ' 首' : '') + '</span>' +
         '<span class="ms-link" id="music-sort-btn">按' + (sortBy === 'added' ? '最近添加' : '名称') + '排序</span>' +
       '</div>' +
-      '<div class="music-tip-line">点击歌曲播放；点右上「更多」编辑 / 删除 / 加入歌单。带 <i class="fas fa-music" style="font-size:10px"></i> 表示网易云链接。</div>' +
+      (batchMode
+        ? '<div class="music-tip-line">批量模式：点歌曲勾选，底部可全选 / 删除 / 加入歌单</div>'
+        : '<div class="music-tip-line">点击歌曲播放；点右上「更多」编辑 / 删除 / 加入歌单。带 <i class="fas fa-music" style="font-size:10px"></i> 表示网易云链接。</div>') +
       (list.length
         ? list.map(function (m, i) { return songRow(m, i); }).join('')
-        : '<div class="music-empty"><i class="fas fa-music"></i>音乐库还没有歌曲，点击「添加」添加吧</div>');
+        : '<div class="music-empty"><i class="fas fa-music"></i>音乐库还没有歌曲，点击「添加」添加吧</div>') +
+      (batchMode
+        ? '<div class="music-batch-bar">' +
+            '<button class="music-head-btn" id="mb-selectall"><i class="fas fa-check-double"></i>全选</button>' +
+            '<button class="music-head-btn" id="mb-topl"><i class="fas fa-folder-open"></i>加入歌单</button>' +
+            '<button class="music-head-btn" id="mb-del" style="color:#ff5050"><i class="fas fa-trash"></i>删除</button>' +
+            '<button class="music-head-btn" id="mb-exit">退出</button>' +
+          '</div>'
+        : '');
     host.innerHTML = html;
 
     var si = $('music-search-input');
@@ -647,24 +740,69 @@
     var add = $('music-add-btn'); if (add) add.onclick = openAddSong;
     var imp = $('music-import-btn'); if (imp) imp.onclick = openNeteaseImport;
     var sort = $('music-sort-btn'); if (sort) sort.onclick = function () { sortBy = sortBy === 'added' ? 'name' : 'added'; renderLibrary(); };
+    var bb = $('music-batch-btn'); if (bb) bb.onclick = toggleBatch;
+    // 批量操作条
+    var mbAll = $('mb-selectall'); if (mbAll) mbAll.onclick = function () { host.querySelectorAll('.sm-song').forEach(function (r) { batchSel[libView[Number(r.dataset.i)].id] = true; }); renderLibrary(); };
+    var mbToPl = $('mb-topl'); if (mbToPl) mbToPl.onclick = batchAddToPlaylist;
+    var mbDel = $('mb-del'); if (mbDel) mbDel.onclick = batchDelete;
+    var mbExit = $('mb-exit'); if (mbExit) mbExit.onclick = toggleBatch;
+
     host.querySelectorAll('.sm-song').forEach(function (row) {
       var i = Number(row.dataset.i);
-      row.addEventListener('click', function () { libView_updateActive(i); loadAndPlay(i, true); });
-      row.querySelector('.sm-song-more').addEventListener('click', function (e) { e.stopPropagation(); openSongMenu(i); });
+      var m = libView[i];
+      if (batchMode) {
+        row.addEventListener('click', function () { toggleRowSel(m.id); });
+      } else {
+        row.addEventListener('click', function () { loadAndPlay(i, true); });
+        var more = row.querySelector('.sm-song-more');
+        if (more) more.addEventListener('click', function (e) { e.stopPropagation(); openSongMenu(i); });
+      }
     });
   }
   function libView_updateActive(i) {}
+  function toggleRowSel(id) {
+    if (batchSel[id]) delete batchSel[id]; else batchSel[id] = true;
+    renderLibrary();
+  }
+  function toggleBatch() { batchMode = !batchMode; batchSel = {}; renderLibrary(); }
+  function batchDelete() {
+    var ids = Object.keys(batchSel);
+    if (!ids.length) { toast('请先勾选要删除的歌曲', 'warning'); return; }
+    if (!confirm('确定删除选中的 ' + ids.length + ' 首歌曲吗？')) return;
+    library = library.filter(function (x) { return !batchSel[x.id]; });
+    if (batchSel[currentId]) { currentId = null; if (audio) audio.pause(); }
+    batchSel = {}; batchMode = false;
+    saveLibrary(); toast('已删除', 'success'); renderLibrary();
+  }
+  function batchAddToPlaylist() {
+    var ids = Object.keys(batchSel);
+    if (!ids.length) { toast('请先勾选歌曲', 'warning'); return; }
+    var opts = playlists.map(function (p) { return '<option value="' + p.id + '">' + esc(p.name) + '</option>'; }).join('');
+    var body = '<div class="mpq-fld"><label>选择歌单</label><select class="tc-input" id="mb-pl-select">' + opts + '</select></div>' +
+      '<div class="mpq-actions"><button class="modal-btn modal-btn-secondary id_mpq_cancel">取消</button><button class="modal-btn modal-btn-primary id_mpq_ok">加入</button></div>';
+    openDialog('加入歌单', body, { noOk: true }, function (d) {
+      d.querySelector('.id_mpq_cancel').onclick = function () { closeDialog(d); };
+      d.querySelector('.id_mpq_ok').onclick = function () {
+        var pid = d.querySelector('#mb-pl-select').value;
+        library.forEach(function (x) { if (batchSel[x.id]) x.playlistId = pid; });
+        saveLibrary(); toast('已加入歌单', 'success'); closeDialog(d);
+        batchSel = {}; batchMode = false; renderLibrary();
+      };
+    });
+  }
   function songRow(m, i) {
     var isCur = (m.id === currentId);
     var dur = m.duration ? fmtDur(m.duration) : '--:--';
-    return '<div class="sm-song' + (isCur ? ' playing' : '') + '" data-i="' + i + '">' +
+    var sel = batchMode && batchSel[m.id];
+    return '<div class="sm-song' + (isCur ? ' playing' : '') + (sel ? ' sel' : '') + '" data-i="' + i + '">' +
+      (batchMode ? '<span class="sm-check' + (sel ? ' on' : '') + '"><i class="fas fa-check"></i></span>' : '') +
       mIco(m) +
       '<div class="sm-song-info">' +
         '<div class="sm-song-name">' + esc(m.name) + '</div>' +
         '<div class="sm-song-sub"' + (m.neteaseId ? ' style="color:var(--accent-color)"' : '') + '>' + esc(m.artist) + '</div>' +
       '</div>' +
       '<span class="sm-song-dur">' + dur + '</span>' +
-      '<button class="sm-song-more" title="更多"><i class="fas fa-ellipsis-v"></i></button>' +
+      (batchMode ? '' : '<button class="sm-song-more" title="更多"><i class="fas fa-ellipsis-v"></i></button>') +
     '</div>';
   }
 
@@ -1022,24 +1160,24 @@
   }
 
   // ---------- 听歌记录 ----------
+  // 听歌记录：只记录「一起听」——几月几日几点、听了多久、结束（不记录具体歌名）
   function renderHistory() {
     var host = $('milk-pane-his'); if (!host) return;
-    var h = history.slice().reverse();
-    var subBar = '<div class="music-his-subtabs">' +
-      '<button class="music-his-subtab' + (histSub === 'mine' ? ' sel' : '') + '" data-hissub="mine">我的听歌</button>' +
-      '<button class="music-his-subtab' + (histSub === 'ta' ? ' sel' : '') + '" data-hissub="ta">听歌记录</button>' +
-      '</div>';
-    host.innerHTML = subBar + (h.length
+    var h = history.filter(function (x) { return x && x.type === 'together'; }).slice().reverse();
+    host.innerHTML = (h.length
       ? h.map(function (x) {
+          var s = new Date(x.start);
+          var p = function (n) { return n < 10 ? '0' + n : '' + n; };
+          var when = (s.getMonth() + 1) + '月' + s.getDate() + '日 ' + p(s.getHours()) + ':' + p(s.getMinutes());
+          var min = Math.floor(x.dur / 60000), sec = Math.floor((x.dur % 60000) / 1000);
+          var durTxt = (min > 0 ? min + '分' : '') + sec + '秒';
           return '<div class="sm-his">' +
             '<span class="sm-his-ico">' + inlineSvg('note') + '</span>' +
-            '<div class="sm-his-info"><div class="sm-his-name">' + esc(x.trackName || '未知歌曲') + '</div><div class="sm-his-sub">' + fmtTS(x.ts) + '</div></div>' +
+            '<div class="sm-his-info"><div class="sm-his-name">一起听</div>' +
+            '<div class="sm-his-sub">' + when + ' · 听了 ' + durTxt + ' 结束</div></div>' +
           '</div>';
         }).join('')
-      : '<div class="music-empty">还没有听歌记录，你播放过的歌会记在这里</div>');
-    host.querySelectorAll('[data-hissub]').forEach(function (btn) {
-      btn.addEventListener('click', function () { histSub = btn.dataset.hissub; renderHistory(); });
-    });
+      : '<div class="music-empty">还没有一起听记录，和对方一起听歌会记在这里</div>');
   }
 
   // ---------- 页面开合 ----------
@@ -1101,6 +1239,8 @@
       open: openPage,
       close: closePage,
       openFloat: showFloat,
+      hideFloat: function () { hideFloat(); },
+      showFloat: function () { if (currentId) showFloat(); },
       play: function (id) { var i = library.findIndex(function (m) { return m.id === id; }); if (i >= 0) { libView = library.slice(); loadAndPlay(i, true); } },
       pause: function () { if (audio) audio.pause(); },
       toggle: togglePlay,
@@ -1109,7 +1249,17 @@
       current: function () { return findTrack(currentId); },
       list: function () { return library.slice(); },
       isPlaying: function () { return isPlaying; },
-      partnerName: function () { return (typeof settings !== 'undefined' && settings.partnerName) || '梦角'; }
+      partnerName: function () { return (typeof settings !== 'undefined' && settings.partnerName) || '对方'; },
+      // 一起听记录（记录开始，结束时调用 stopTogether 写入）
+      startTogether: function (name) { togetherStart = Date.now(); togetherName = name || '一起听'; },
+      stopTogether: function () {
+        if (!togetherStart) return;
+        history.push({ id: uid(), type: 'together', name: togetherName, start: togetherStart, dur: Date.now() - togetherStart });
+        if (history.length > 200) history = history.slice(-200);
+        saveHistory();
+        togetherStart = null; togetherName = null;
+        if (page) renderHistory();
+      }
     };
     // 记录听歌
     audio_go(initAudio());
@@ -1117,21 +1267,9 @@
     resumeLast();
     return Promise.resolve();
   }
-  // 首次播放时记一条听歌记录
-  var lastLoggedId = null;
-  function audio_go(a) {
-    a.addEventListener('play', function () {
-      if (currentId && currentId !== lastLoggedId) {
-        lastLoggedId = currentId;
-        var m = findTrack(currentId);
-        if (m) {
-          history.push({ id: uid(), trackId: m.id, trackName: m.name, ts: Date.now() });
-          if (history.length > 200) history = history.slice(-200);
-          saveHistory();
-        }
-      }
-    });
-  }
+  // 不再记录"我的听歌"（仅保留一起听记录）
+  var togetherStart = null, togetherName = null;
+  function audio_go(a) { /* 保留钩子，播放时不写个人听歌记录 */ }
 
   // 暴露到 window 供 app.js 启动调用
   window.initMusicPlayer = init;

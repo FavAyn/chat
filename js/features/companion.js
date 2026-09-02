@@ -1596,6 +1596,9 @@
         page.classList.add('active');
         document.body.style.overflow = 'hidden';
 
+        // 进入陪伴页：隐藏音乐悬浮窗（陪伴页内改用页面里的「我的音乐库」入口切换白噪音/音乐）
+        try { if (window.MilkMusic && typeof window.MilkMusic.hideFloat === 'function') window.MilkMusic.hideFloat(); } catch (e) {}
+
         // 启动会话时钟（统计陪伴时长用）
         // 注意：恢复闪退会话时不要重置时钟（保留 resumeFromSession 里设置的 _sessionStartTime）
         if (!opts.isResume) {
@@ -1738,6 +1741,9 @@
         document.body.style.overflow = '';
         closeSettingsPanel();
         $('companion-exit-confirm').classList.remove('active');
+
+        // 退出陪伴页：若有在播的音乐，恢复音乐悬浮窗
+        try { if (window.MilkMusic && typeof window.MilkMusic.showFloat === 'function') window.MilkMusic.showFloat(); } catch (e) {}
 
         // 清空会话时钟
         _sessionStartTime = null;
@@ -1974,11 +1980,17 @@
                     <div class="companion-noise-option ${activeType === 'fire' ? 'active' : ''}" data-type="fire">
                         <i class="fas fa-fire"></i><span>篝火</span>
                     </div>
-                    <div class="companion-noise-option ${activeType === 'custom' ? 'active' : ''}" data-type="custom">
-                        <i class="fas fa-music"></i><span>我的音乐</span>
-                    </div>
                     <div class="companion-noise-option ${activeType === 'silent' ? 'active' : ''}" data-type="silent">
                         <i class="fas fa-volume-mute"></i><span>无声</span>
+                    </div>
+                </div>
+                <!-- 集成我们的音乐系统：白噪音 / 音乐随时切换 -->
+                <div class="companion-noise-milk row" id="companion-noise-milk">
+                    <div class="companion-noise-option" data-milk="open">
+                        <i class="fas fa-music"></i><span>我的音乐库</span>
+                    </div>
+                    <div class="companion-noise-option" data-milk="invite">
+                        <i class="fas fa-headphones"></i><span>邀请 TA 一起听</span>
                     </div>
                 </div>
                 ${currentSongName ? `
@@ -2018,11 +2030,17 @@
         // 选项点击
         card.querySelectorAll('.companion-noise-option').forEach(opt => {
             opt.addEventListener('click', () => {
-                const type = opt.dataset.type;
-                if (type === 'custom') {
+                const milk = opt.dataset.milk;
+                if (milk) {
                     card.remove();
-                    openNoiseListCard();
-                } else if (type === 'silent') {
+                    // 切到我们的音乐：先停掉白噪音，再打开音乐库 / 邀请一起听
+                    try { if (typeof stopNoise === 'function') stopNoise(); } catch (e) {}
+                    if (milk === 'open' && window.MilkMusic && typeof window.MilkMusic.open === 'function') window.MilkMusic.open();
+                    else if (milk === 'invite' && window.listenFeature && typeof window.listenFeature.startInvite === 'function') window.listenFeature.startInvite();
+                    return;
+                }
+                const type = opt.dataset.type;
+                if (type === 'silent') {
                     startNoise('silent');
                     card.remove();
                 } else {

@@ -21,7 +21,10 @@
   var ENABLED_KEY = 'musicListenEnabled';
   var enabled = true;            // TA 也能主动邀请（可关闭）
 
-  function pname() { try { return window.MilkMusic && window.MilkMusic.partnerName ? window.MilkMusic.partnerName() : 'TA'; } catch (e) { return 'TA'; } }
+  // 用你自定义的对方昵称（settings.partnerName），未设置时兜底"对方"
+  function pname() { try { return window.MilkMusic && window.MilkMusic.partnerName ? window.MilkMusic.partnerName() : '对方'; } catch (e) { return '对方'; } }
+  function startTogetherRec(name) { try { if (window.MilkMusic && window.MilkMusic.startTogether) window.MilkMusic.startTogether(name); } catch (e) {} }
+  function stopTogetherRec() { try { if (window.MilkMusic && window.MilkMusic.stopTogether) window.MilkMusic.stopTogether(); } catch (e) {} }
   function myname() { return (typeof settings !== 'undefined' && settings.myName) || '我'; }
   function toast(msg, type) { try { if (typeof showNotification === 'function') showNotification(msg, type || 'info', 3000); } catch (e) {} }
 
@@ -208,6 +211,7 @@
     var w = document.getElementById('ml-tg-who'); if (w) w.textContent = '和 ' + pname() + ' 一起听';
     var t = document.getElementById('ml-together'); if (t) t.classList.add('show');
     syncTogetherPlay();
+    startTogetherRec(song.name);   // 开始记录一起听
   }
   function syncTogetherPlay() {
     var pe = document.getElementById('ml-tg-play'); if (!pe) return;
@@ -308,6 +312,7 @@
     if (phase === 'together' && togetherSong) {
       chatEvent('fa-headphones', '结束与 ' + pname() + ' 的一起听', null);
     }
+    if (phase === 'together') stopTogetherRec();   // 记录结束+时长
     active = false; phase = 'idle'; togetherSong = null;
     hideOverlays();
     var t = document.getElementById('ml-together'); if (t) t.classList.remove('show');

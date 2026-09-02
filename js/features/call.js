@@ -840,6 +840,8 @@ html:not([data-theme="dark"])[data-color-theme="black-white"] .message-sent{
         let on = false;
         hdr.addEventListener('pointerdown', e => {
             if (e.pointerType === 'mouse' && e.button !== 0) return;
+            // 点在按钮上时不要进入拖拽，否则会拦截按钮（缩小/调大小等）的点击
+            if (e.target.closest('button')) return;
             e.preventDefault();
             const r = win.getBoundingClientRect();
             S.dragOff = { x: e.clientX - r.left, y: e.clientY - r.top };

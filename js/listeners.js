@@ -1,4 +1,6 @@
 function setupEventListeners() {
+    // 表情包面板优先、独立绑定——即使其它初始化异常，也不能让表情按钮失灵
+    try { initComboMenu(); } catch (e) { console.error("initComboMenu:", e); }
     try {
         initCoreListeners();
         initModalListeners();
@@ -12,9 +14,6 @@ function setupEventListeners() {
         initAnniversaryModule(); 
         initThemeEditor(); 
         initThemeSchemes();
-        
-        initComboMenu(); 
-        
     } catch (e) {
         console.error("事件绑定过程中发生错误:", e);
     }
@@ -1710,16 +1709,18 @@ if (_cancelEnvEl) _cancelEnvEl.addEventListener('click', () => {
                 });
             }
             // 音乐播放器开关已迁移到新的 mochi 系音乐模块（js/music-player.js）
-            // 这里改为打开音乐库页面，不再切换旧的悬浮播放器
+            // 这里改为打开音乐库页面，不再切换旧的悬浮播放器（该开关项已从高级功能移除，判空防报错）
             const musicToggle = document.getElementById('music-player-toggle');
-            musicToggle.addEventListener('click', () => {
-                if (window.MilkMusic && typeof window.MilkMusic.open === 'function') {
-                    window.MilkMusic.open();
-                } else {
-                    showNotification('音乐模块尚未就绪', 'info');
-                }
-                hideModal(DOMElements.advancedModal.modal);
-            });
+            if (musicToggle) {
+                musicToggle.addEventListener('click', () => {
+                    if (window.MilkMusic && typeof window.MilkMusic.open === 'function') {
+                        window.MilkMusic.open();
+                    } else {
+                        showNotification('音乐模块尚未就绪', 'info');
+                    }
+                    hideModal(DOMElements.advancedModal.modal);
+                });
+            }
         }
     const annToggleBtn = document.getElementById('ann-toggle-btn');
     const annFormWrapper = document.getElementById('ann-form-wrapper');
