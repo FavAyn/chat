@@ -401,6 +401,8 @@
     display: flex; align-items: center; justify-content: center; font-size: 11px;
 }
 .mf-drag .mf-icon-btn:hover { color: var(--accent-color); background: rgba(var(--accent-color-rgb), 0.12); }
+.mf-drag #mf-hide { color: var(--text-secondary); }
+.mf-drag #mf-hide:hover { color: var(--accent-color); }
 
 .mf-main { display: flex; align-items: center; gap: 10px; padding: 12px; }
 .mf-cover {

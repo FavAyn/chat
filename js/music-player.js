@@ -35,6 +35,7 @@
   var inited = false;
   var batchMode = false;            // 音乐库是否处于批量管理模式
   var batchSel = {};                // 批量勾选：{ id: true }
+  var floatHiddenByUser = false;    // 用户手动点过"隐藏"，不再自动弹浮窗
 
   // 全局 DOM
   var $ = function (id) { return document.getElementById(id); };
@@ -342,14 +343,14 @@
     try { storeSet('music:lastPos', { id: currentId, t: audio ? (audio.currentTime || 0) : 0 }); } catch (e) {}
   }
   function resumeLast() {
+    // 只静默恢复上次的歌与进度（暂停态），不在加载时自动弹出悬浮窗
     var lp = storeGet('music:lastPos');
     if (!lp || !lp.id) return;
     var m = findTrack(lp.id);
     if (!m) return;
     currentId = m.id;
-    var a = initAudio();
     updatePlayerUI();
-    showFloat(); // 显示浮动小窗（暂停态，不做自动播放）
+    var a = initAudio();
     resolvePlayUrl(m).then(function (url) {
       if (!url || currentId !== m.id) return;
       a.src = url; a.load();
@@ -372,19 +373,29 @@
     var m = findTrackByIdx(index);
     if (!m) return;
     currentId = m.id;
+    floatHiddenByUser = false;
     var a = initAudio();
     updatePlayerUI();
     showFloat(); // 开始播放即唤出悬浮小窗
-    resolvePlayUrl(m).then(function (url) {
-      if (!url) { toast('无法播放：请检查链接是否有效', 'error'); return; }
-      a.src = url;
+    var isCloud = (m.source === 'local' && window.CloudMedia && window.CloudMedia.isCloudRef && window.CloudMedia.isCloudRef(m.url));
+    if (isCloud) {
+      // 云端引用：需先解析成 blob URL（异步，无法保持用户手势，交给后台继续）
+      resolvePlayUrl(m).then(function (url) {
+        if (!url || currentId !== m.id) return;
+        a.src = url; a.load();
+        if (forcePlay || isPlaying) { var pp = a.play(); if (pp && pp.catch) pp.catch(function () {}); }
+        skipToEnd(false);
+      }).catch(function () { toast('云端音频加载失败', 'error'); });
+    } else {
+      // 直链：同步设置并播放，保留用户手势 → 单击即可播放
+      if (m.url) a.src = m.url; else { toast('无法播放：请检查链接是否有效', 'error'); return; }
       a.load();
       if (forcePlay || isPlaying) {
         var p = a.play();
         if (p && p.catch) p.catch(function () { toast('播放失败，请检查网络或链接', 'error'); });
       }
       skipToEnd(false);
-    }).catch(function () { toast('云端音频加载失败', 'error'); });
+    }
   }
   // 供 renderLibrary 内部按数组下标找当前 index
   var libView = [];  // 当前过滤后的视图（由 renderLibrary 填充）
@@ -459,6 +470,7 @@
     f.innerHTML =
       '<div class="mf-drag" id="mf-drag">' +
         '<span class="mf-title">正在播放</span>' +
+        '<button class="mf-icon-btn" id="mf-hide" title="隐藏(仅播放)"><i class="fas fa-eye-slash"></i></button>' +
         '<button class="mf-icon-btn" id="mf-min" title="最小化"><i class="fas fa-minus"></i></button>' +
         '<button class="mf-icon-btn" id="mf-close" title="关闭"><i class="fas fa-times"></i></button>' +
       '</div>' +
@@ -511,6 +523,7 @@
     $('mf-cover').onclick = function () { if (!_supClick) openPage(); };
     $('mf-list').onclick = function () { if (!_supClick) openFloatList(); };
     $('mf-min').onclick = function (e) { if (!_supClick) setFloatMin(true, e); };
+    $('mf-hide').onclick = function () { if (!_supClick) hideOnlyFloat(); };
     $('mf-close').onclick = function () { if (!_supClick) stopAndHideFloat(); };
     $('mfm-close').onclick = function () { closeFloatList(); };
     $('mf-track').onclick = function (e) {
@@ -617,7 +630,7 @@
     }
   }
   function showFloat() {
-    if (!floatEn) return;
+    if (!floatEn || floatHiddenByUser) return;   // 用户点了隐藏就不自动弹，直到重新播放/进音乐页
     setFloatMin(false);
     if (!currentId && library.length) loadAndPlay(0, true);
   }
@@ -630,6 +643,12 @@
   function hideFloat() {
     if (floatBox) floatBox.classList.remove('mf-open');
     if (miniBtn) miniBtn.classList.remove('mm-open');
+  }
+  // 用户点"隐藏"：只关掉悬浮窗，歌曲继续播；再次进入音乐页播放才会唤出
+  function hideOnlyFloat() {
+    floatHiddenByUser = true;
+    hideFloat();
+    showNotification('已隐藏悬浮窗，音乐继续播放中', 'info', 1800);
   }
   function updatePlayerUI() {
     var m = findTrack(currentId);
@@ -753,7 +772,10 @@
       if (batchMode) {
         row.addEventListener('click', function () { toggleRowSel(m.id); });
       } else {
-        row.addEventListener('click', function () { loadAndPlay(i, true); });
+        row.addEventListener('click', function () {
+          loadAndPlay(i, true);
+          renderLibrary();   // 重渲染，让"正在播放"高亮跟随点击的这首
+        });
         var more = row.querySelector('.sm-song-more');
         if (more) more.addEventListener('click', function (e) { e.stopPropagation(); openSongMenu(i); });
       }
@@ -1185,6 +1207,11 @@
     buildPage();
     page.classList.add('mp-open');
     switchTab(curTab);
+    // 进入音乐页 = 唤醒悬浮窗（若之前被"隐藏"，这里取消隐藏标记并重新显示）
+    if (currentId) {
+      floatHiddenByUser = false;
+      showFloat();
+    }
   }
   function closePage() {
     if (page) page.classList.remove('mp-open');
