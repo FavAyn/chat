@@ -774,12 +774,19 @@
       } else {
         row.addEventListener('click', function () {
           loadAndPlay(i, true);
-          renderLibrary();   // 重渲染，让"正在播放"高亮跟随点击的这首
+          highlightRow(row);   // 只切当前行的 `.playing` 高亮，不整表重建（单击即生效、不闪）
         });
         var more = row.querySelector('.sm-song-more');
         if (more) more.addEventListener('click', function (e) { e.stopPropagation(); openSongMenu(i); });
       }
     });
+  }
+  // 只更新"正在播放"高亮：挪走旧的 .playing，加在指定行（避免整表重建）
+  function highlightRow(activeRow) {
+    var host = $('milk-pane-lib');
+    if (!host) return;
+    host.querySelectorAll('.sm-song.playing').forEach(function (r) { r.classList.remove('playing'); });
+    if (activeRow) activeRow.classList.add('playing');
   }
   function libView_updateActive(i) {}
   function toggleRowSel(id) {
