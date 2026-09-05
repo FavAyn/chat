@@ -7,7 +7,7 @@
 #milk-music-page {
     position: fixed;
     inset: 0;
-    z-index: 4510;               /* 高于陪伴页(4000)，在陪伴页内也能打开音乐库 */
+    z-index: 1580;               /* 弹窗(2600)需盖过音乐页；陪伴页内改用"打开音乐库"跳回，不抬高此层级 */
     background: var(--secondary-bg);
     display: none;
     flex-direction: column;

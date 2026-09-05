@@ -1235,7 +1235,7 @@
   function openDialog(title, bodyHtml, opts, onMount) {
     var modal = document.createElement('div');
     modal.className = 'modal';
-    modal.style.zIndex = '2600';
+    modal.style.zIndex = '999999';   // 最高层级，确保弹窗浮在任何全屏页(音乐库4500+)之上
     modal.style.display = 'none';
     modal.innerHTML =
       '<div class="modal-content" style="max-height:78vh;overflow-y:auto;padding:22px 22px 18px;">' +

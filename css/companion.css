@@ -812,6 +812,21 @@ html[data-theme="dark"] .companion-mode-card i {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
 }
+.companion-catchnight-corner {
+    position: absolute;
+    bottom: calc(max(30px, env(safe-area-inset-bottom, 30px)) + 104px);
+    right: 20px;
+    z-index: 5;
+    background: rgba(40,40,40,0.65) !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+    color: #fff !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+.companion-catchnight-corner.active {
+    background: rgba(var(--accent-color-rgb, 197,164,126), 0.95) !important;
+    color: #fff !important;
+}
 .companion-noise-corner.active {
     background: rgba(var(--accent-color-rgb, 197,164,126), 0.95) !important;
     color: #fff !important;

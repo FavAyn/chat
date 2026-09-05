@@ -515,6 +515,16 @@ const loadData = async () => {
 
         customPeriodCare = savedPeriodCare || [];  // 没有内置预设，用户没配置就是空数组
 
+        // 抓熬夜通知模板：从 catch-night 模块的 localStorage 键读取（氛围感配置用）
+        try {
+            if (window.catchNight && window.catchNight.getTemplates) customCatchNight = window.catchNight.getTemplates();
+            else {
+                const cnKey = (typeof window.APP_PREFIX === 'string' ? window.APP_PREFIX : 'CHAT_APP_V3_') + 'catchNightTemplates';
+                const cnRaw = localStorage.getItem(cnKey);
+                if (cnRaw) { const cnArr = JSON.parse(cnRaw); if (Array.isArray(cnArr)) customCatchNight = cnArr; }
+            }
+        } catch (e) { customCatchNight = []; }
+
         const chatMessagesRejected = results[1].status === 'rejected';
         if (chatMessagesRejected) {
             console.warn('[loadData] chatMessages 读取失败（不是真的没有数据），将重试一次:', results[1].reason);
@@ -761,6 +771,7 @@ const LIBRARY_CONFIG = {
             { id: 'statuses', name: '对方状态', mode: 'list' },
             { id: 'surveyBank', name: '问卷题库', mode: 'list' },
             { id: 'period', name: '经期', mode: 'list' },
+            { id: 'catchNight', name: '抓熬夜', mode: 'list' },
             { id: 'mottos', name: '顶部格言', mode: 'list' },
             { id: 'intros', name: '开场动画', mode: 'list' }
         ]
@@ -1018,6 +1029,10 @@ const saveData = async () => {
         { key: 'customMottos',           val: () => localforage.setItem(getStorageKey('customMottos'), customMottos) },
         { key: 'customIntros',           val: () => localforage.setItem(getStorageKey('customIntros'), customIntros) },
         { key: 'customPeriodCare',       val: () => localforage.setItem(getStorageKey('customPeriodCare'), customPeriodCare) },
+        { key: 'customCatchNight',       val: () => {
+            const v = (typeof window !== 'undefined' && window.catchNight && window.catchNight.getTemplates) ? window.catchNight.getTemplates() : window.customCatchNight;
+            if (window.catchNight && window.catchNight.setTemplates) window.catchNight.setTemplates(v);
+        } },
         { key: 'stickerLibrary',         val: () => localforage.setItem(getStorageKey('stickerLibrary'), stickerLibrary) },
         { key: 'myStickerLibrary',       val: () => localforage.setItem(getStorageKey('myStickerLibrary'), myStickerLibrary) },
         { key: 'myStickerGroups',        val: () => localforage.setItem(getStorageKey('myStickerGroups'), window.myStickerGroups || []) },

@@ -7277,12 +7277,16 @@
         }
 
         .modal-main-view .reply-tabs {
-    padding: 15px 20px 10px;
+    padding: 13px 20px 8px;
     background-color: var(--secondary-bg);
     white-space: nowrap;
-    overflow-x: auto;
+    overflow-x: auto;          /* tab 较多时横向可滑，一行放不下自动换行 */
+    flex-wrap: wrap;
     flex-shrink: 0;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
         }
+        .modal-main-view .reply-tabs::-webkit-scrollbar { display: none; }
 
         .modal-main-view .reply-toolbar {
     padding: 10px 20px;

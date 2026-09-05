@@ -1595,9 +1595,11 @@
         // 显示页面
         page.classList.add('active');
         document.body.style.overflow = 'hidden';
+        window._companionCurrentMode = currentMode; // 供外部模块识别当前陪伴模式
 
         // 进入陪伴页：隐藏音乐悬浮窗（陪伴页内改用页面里的「我的音乐库」入口切换白噪音/音乐）
         try { if (window.MilkMusic && typeof window.MilkMusic.hideFloat === 'function') window.MilkMusic.hideFloat(); } catch (e) {}
+        // 熬夜检测/熬夜模式：入口已改到白噪音卡片里（companion-noise 选项），此处不再处理右下角悬浮按钮
 
         // 启动会话时钟（统计陪伴时长用）
         // 注意：恢复闪退会话时不要重置时钟（保留 resumeFromSession 里设置的 _sessionStartTime）
@@ -1741,6 +1743,7 @@
         document.body.style.overflow = '';
         closeSettingsPanel();
         $('companion-exit-confirm').classList.remove('active');
+        window._companionCurrentMode = null; // 退出陪伴，清除模式标记
 
         // 退出陪伴页：若有在播的音乐，恢复音乐悬浮窗
         try { if (window.MilkMusic && typeof window.MilkMusic.showFloat === 'function') window.MilkMusic.showFloat(); } catch (e) {}
@@ -1983,6 +1986,10 @@
                     <div class="companion-noise-option ${activeType === 'silent' ? 'active' : ''}" data-type="silent">
                         <i class="fas fa-volume-mute"></i><span>无声</span>
                     </div>
+                    ${currentMode === 'sleep' ? `
+                    <div class="companion-noise-option" id="companion-catchnight-opt" data-type="catchnight" style="color:${window.catchNight && window.catchNight.isEnabled() ? 'var(--text-primary)' : 'var(--accent-color)'};">
+                        <i class="fas fa-moon"></i><span>熬夜模式${window.catchNight && window.catchNight.isEnabled() ? ' · 关' : ' · 开'}</span>
+                    </div>` : ''}
                 </div>
                 <!-- 集成我们的音乐系统：白噪音 / 音乐随时切换 -->
                 <div class="companion-noise-milk row" id="companion-noise-milk">
@@ -2040,6 +2047,18 @@
                     return;
                 }
                 const type = opt.dataset.type;
+                if (type === 'catchnight') {
+                    // 切换熬夜模式：开启=关闭熬夜检测。on=false 表示熬夜模式开启(accent色)
+                    if (window._tapCatchNight) window._tapCatchNight();
+                    const detecting = window.catchNight && window.catchNight.isEnabled();
+                    const itemOpt = card.querySelector('#companion-catchnight-opt');
+                    if (itemOpt) {
+                        itemOpt.style.color = detecting ? 'var(--text-primary)' : 'var(--accent-color)';
+                        itemOpt.querySelector('span').textContent = '熬夜模式' + (detecting ? ' · 关' : ' · 开');
+                        itemOpt.classList.toggle('active', !detecting);
+                    }
+                    return;
+                }
                 if (type === 'silent') {
                     startNoise('silent');
                     card.remove();
@@ -4019,6 +4038,8 @@
                 openNoiseCard();
             });
         }
+
+        // 熬夜检测开关：点击由 catch-night.js 统一绑定（避免重复触发通知）
 
         // 对话历史按钮（右下角悬浮，音符按钮上方）
         const historyBtn = $('companion-history-btn');
