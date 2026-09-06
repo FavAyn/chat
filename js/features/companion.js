@@ -1745,7 +1745,7 @@
         $('companion-exit-confirm').classList.remove('active');
         window._companionCurrentMode = null; // 退出陪伴，清除模式标记
 
-        // 退出陪伴页：若有在播的音乐，恢复音乐悬浮窗
+        // 退出陪伴页：仅当音乐"正在播放"时才恢复悬浮窗；没播（含暂停/停止）就不弹
         try { if (window.MilkMusic && typeof window.MilkMusic.showFloat === 'function') window.MilkMusic.showFloat(); } catch (e) {}
 
         // 清空会话时钟

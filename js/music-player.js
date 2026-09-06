@@ -631,8 +631,8 @@
   }
   function showFloat() {
     if (!floatEn || floatHiddenByUser) return;   // 用户点了隐藏就不自动弹，直到重新播放/进音乐页
+    if (!currentId) return;                       // 没有在播的歌就不弹浮窗，也不自动开播
     setFloatMin(false);
-    if (!currentId && library.length) loadAndPlay(0, true);
   }
   function stopAndHideFloat() {
     if (audio) audio.pause();
@@ -1274,7 +1274,7 @@
       close: closePage,
       openFloat: showFloat,
       hideFloat: function () { hideFloat(); },
-      showFloat: function () { if (currentId) showFloat(); },
+      showFloat: function () { if (currentId && isPlaying) showFloat(); },   // 仅"正在播放"才恢复悬浮窗
       play: function (id) { var i = library.findIndex(function (m) { return m.id === id; }); if (i >= 0) { libView = library.slice(); loadAndPlay(i, true); } },
       pause: function () { if (audio) audio.pause(); },
       toggle: togglePlay,

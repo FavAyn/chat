@@ -197,9 +197,11 @@ async function _checkAction(){
     try{
         const KEY=getStorageKey(_M_COOLDOWN_KEY),now=Date.now();
         const next=await localforage.getItem(KEY);if(next!==null&&now<next)return;
-        await localforage.setItem(KEY,now+_M_CD_MIN+Math.random()*(_M_CD_MAX-_M_CD_MIN));
-        if(Math.random()<0.40){if(typeof window._generatePartnerLetter==='function')window._generatePartnerLetter();}
-        if(Math.random()<0.70){await generatePartnerMoment();}
+        // 每天随机时间发一条动态（不再按概率；约 22~26 小时后触发下一次）
+        await localforage.setItem(KEY,now+22*60*60*1000+Math.random()*4*60*60*1000);
+        await generatePartnerMoment();
+        // 电台信仍保留小概率（可选）
+        if(Math.random()<0.25){if(typeof window._generatePartnerLetter==='function')window._generatePartnerLetter();}
     }catch(e){console.warn('[Moments] _checkAction 失败',e);}
 }
 
