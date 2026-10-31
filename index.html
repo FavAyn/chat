@@ -22,6 +22,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/gomoku-milk.css">
+    <link rel="stylesheet" href="css/garden-mochi.css">
     <link rel="stylesheet" href="css/companion.css">
     <link rel="stylesheet" href="css/cinema.css">
     <link rel="stylesheet" href="css/period.css">
@@ -405,6 +407,7 @@ html[data-theme="dark"] #cs-transition-overlay{background:radial-gradient(circle
     <button id="collapse-expand-btn" title="展开更多" style="display:none;width:36px;height:36px;border:none;border-radius:50%;cursor:pointer;background:rgba(var(--accent-color-rgb),0.12);color:var(--accent-color);font-size:14px;transition:all 0.25s;flex-shrink:0;align-items:center;justify-content:center;" onclick="window.toggleCollapsedExtras && window.toggleCollapsedExtras()"><i class="fas fa-chevron-up"></i></button>
     <!-- 视频通话按钮（替代原麦克风位置）-->
     <button class="videocall-btn input-btn" id="videocall-btn" title="视频通话"><i class="fas fa-video"></i></button>
+    <button class="games-hub-btn input-btn" id="games-hub-btn" title="更多" style="color:var(--text-secondary);"><i class="fas fa-ellipsis"></i></button>
     <button class="attachment-btn input-btn collapse-hideable" id="attachment-btn" title="发送图片"><i class="fas fa-image"></i></button>
     
     <button class="combo-btn input-btn collapse-hideable" id="combo-btn" title="表情 & 拍一拍">
@@ -563,11 +566,12 @@ html[data-theme="dark"] #cs-transition-overlay{background:radial-gradient(circle
         <div class="cs-pills-wrap">
             <div class="cs-pills">
                 <button class="cs-pill cs-pill-on" id="csp-feed"    onclick="csSwitchTab('feed')"   title="动态"><span class="cs-pill-icon"></span></button>
-                <button class="cs-pill"             id="csp-album"   onclick="csSwitchTab('album')"  title="相册"><span class="cs-pill-icon"></span></button>
+                <button class="cs-pill"             id="csp-diary"   onclick="csSwitchTab('diary')"  title="日记"><span class="cs-pill-icon"></span></button>
                 <button class="cs-pill"             id="csp-mood"    onclick="csSwitchTab('mood')"   title="心情手账"><span class="cs-pill-icon"></span></button>
+                <button class="cs-pill"             id="csp-garden"  onclick="csSwitchTab('garden')" title="花园"><span class="cs-pill-icon"></span></button>
                 <button class="cs-pill"             id="csp-ann"     onclick="csSwitchTab('ann')"    title="纪念日"><span class="cs-pill-icon"></span></button>
                 <button class="cs-pill"             id="csp-cinema"  onclick="csSwitchTab('cinema')" title="电影院"><span class="cs-pill-icon"></span></button>
-                <button class="cs-pill"             id="csp-garden"  onclick="csSwitchTab('garden')" title="花园"><span class="cs-pill-icon"></span></button>
+                <button class="cs-pill"             id="csp-album"   onclick="csSwitchTab('album')"  title="相册" style="display:none;"><span class="cs-pill-icon"></span></button>
             </div>
         </div>
     </div>
@@ -656,6 +660,19 @@ html[data-theme="dark"] #cs-transition-overlay{background:radial-gradient(circle
             <div class="cs-mood-card" style="margin-top:10px;">
                 <div id="mood-stats-container"></div>
             </div>
+            <div style="height:20px;"></div>
+        </div>
+        <div class="cs-panel" id="cs-panel-diary">
+            <div class="cs-mood-hd">
+                <span class="cs-mood-hd-title">日记</span>
+                <button class="cs-icon-btn" id="diary-jump-btn" title="按日期查找" style="margin-left:6px;margin-right:auto;"><i class="fas fa-calendar-day"></i></button>
+                <button class="cs-icon-btn" id="diary-add-btn" title="写今天"><i class="fas fa-plus"></i></button>
+            </div>
+            <div id="diary-jump-wrap" style="display:none;align-items:center;gap:8px;margin:0 4px 10px;font-size:12px;color:var(--text-secondary);">
+                <i class="fas fa-calendar-day"></i><span>跳到某天</span>
+                <input type="date" id="diary-jump" style="flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);font-family:inherit;font-size:12px;">
+            </div>
+            <div id="diary-list"></div>
             <div style="height:20px;"></div>
         </div>
         <div class="cs-panel" id="cs-panel-ann">
@@ -2382,8 +2399,16 @@ html[data-theme="dark"] #cs-transition-overlay{background:radial-gradient(circle
                     <div class="settings-item" id="custom-replies-function">
                         <i class="fas fa-comment-dots"></i><span>自定义回复</span>
                     </div>
-                    <div class="settings-item" id="stats-function">
-                        <i class="fas fa-chart-bar"></i><span>消息统计</span>
+                    <div class="settings-item" id="mood-function">
+                        <i class="fas fa-calendar-day"></i><span>心情手账</span>
+                    </div>
+                    <div class="settings-item" id="survey-function">
+                        <i class="fas fa-clipboard-list"></i><span>问卷</span>
+                        <span id="survey-entry-badge" style="display:none;position:absolute;top:10px;right:10px;width:8px;height:8px;background:var(--accent-color);border-radius:50%;border:1.5px solid var(--primary-bg);pointer-events:none;"></span>
+                    </div>
+                    <div class="settings-item" id="envelope-function">
+                        <i class="fas fa-envelope-open-text"></i><span>信箱</span>
+                        <span id="env-entry-badge" style="display:none;position:absolute;top:10px;right:10px;width:8px;height:8px;background:var(--accent-color);border-radius:50%;border:1.5px solid var(--primary-bg);pointer-events:none;"></span>
                     </div>
                     <div class="settings-item" id="companion-diary-function">
                         <i class="fas fa-book"></i><span>陪伴日记</span>
@@ -2404,19 +2429,11 @@ html[data-theme="dark"] #cs-transition-overlay{background:radial-gradient(circle
                         <i class="fas fa-balance-scale"></i>
                         <span>抉择</span>
                     </div>
-                    <div class="settings-item" id="survey-function">
-                        <i class="fas fa-clipboard-list"></i><span>问卷</span>
-                        <span id="survey-entry-badge" style="display:none;position:absolute;top:10px;right:10px;width:8px;height:8px;background:var(--accent-color);border-radius:50%;border:1.5px solid var(--primary-bg);pointer-events:none;"></span>
-                    </div>
-                    <div class="settings-item" id="envelope-function">
-                        <i class="fas fa-envelope-open-text"></i><span>信箱</span>
-                        <span id="env-entry-badge" style="display:none;position:absolute;top:10px;right:10px;width:8px;height:8px;background:var(--accent-color);border-radius:50%;border:1.5px solid var(--primary-bg);pointer-events:none;"></span>
-                    </div>
                     <div class="settings-item" id="daily-greeting-function">
                         <i class="fas fa-newspaper"></i><span>今日公告</span>
                     </div>
-                    <div class="settings-item" id="mood-function" style="display:none;">
-                        <i class="fas fa-calendar-day"></i><span>心情手账</span>
+                    <div class="settings-item" id="stats-function">
+                        <i class="fas fa-chart-bar"></i><span>消息统计</span>
                     </div>
                     <div class="settings-item" id="anniversary-function" style="display:none;">
                         <i class="fas fa-heart"></i><span>重要日</span>
@@ -3559,6 +3576,273 @@ html[data-theme="dark"] #cs-transition-overlay{background:radial-gradient(circle
     </div>
 </div>
 
+    <div class="page" id="page-garden" hidden>
+      <div class="chat-head">
+        <span class="ch-back" id="garden-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></span>
+        <span class="ch-name">花园</span>
+      </div>
+      <div class="garden-scroll">
+        <div class="garden-weather-bar" id="garden-weather-bar">
+          <span class="garden-weather-ico" id="garden-weather-ico">☀</span>
+          <span class="garden-weather-txt" id="garden-weather-txt">晴朗 · 适合浇水</span>
+          <span class="garden-season" id="garden-season">🌸 春季</span>
+        </div>
+        <div class="garden-level-bar" id="garden-level-bar"></div>
+        <div class="garden-grid" id="garden-grid"></div>
+        <div class="garden-stats" id="garden-stats"></div>
+        <div class="garden-visitor" id="garden-visitor"></div>
+        <div class="garden-toolbar" id="garden-toolbar">
+          <button class="garden-tool" data-tool="water" title="浇水">💧<span class="garden-tool-label">浇水</span></button>
+          <button class="garden-tool" data-tool="plant" title="种植">🌱<span class="garden-tool-label">种植</span></button>
+          <button class="garden-tool" data-tool="fertilize" title="施肥">🧪<span class="garden-tool-label">施肥</span></button>
+          <button class="garden-tool" data-tool="harvest" title="收获">🧺<span class="garden-tool-label">收获</span></button>
+          <button class="garden-tool batch" data-tool="waterall" title="一键浇">💦<span class="garden-tool-label">全浇</span></button>
+          <button class="garden-tool batch" data-tool="harvestall" title="一键收">📦<span class="garden-tool-label">全收</span></button>
+        </div>
+        <div class="garden-log glass" id="garden-log">
+          <div class="garden-log-title">花园日志</div>
+          <div class="garden-log-list" id="garden-log-list"></div>
+        </div>
+        <div class="garden-dex glass" id="garden-dex"></div>
+        <div class="garden-inv glass" id="garden-inv"></div>
+        <div class="garden-lb glass" id="garden-lb"></div>
+        <div class="garden-data-manage glass" id="garden-data-manage" style="padding:14px;">
+          <div class="garden-log-title" style="margin-bottom:10px;">花园数据管理</div>
+          <div style="display:flex;gap:10px;">
+            <button data-garden-act="export" class="garden-tool" style="flex:1;">导出数据</button>
+            <button data-garden-act="clear" class="garden-tool" style="flex:1;color:#ff5050;">清空数据</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 五子棋面===== -->
+    <div id="chat-gomoku-panel" class="gk-panel" hidden>
+      <div class="gk-card">
+        <div class="gk-head">
+          <span class="gk-names"><span id="gk-partner-name">TA</span> · 五子</span>
+          <div class="gk-tools">
+            <select id="gk-diff" class="gk-diff">
+              <option value="casual">休闲</option>
+              <option value="daily" selected>日常</option>
+              <option value="serious">认真</option>
+            </select>
+            <button id="gk-sound" class="gk-ico" title="音效">🔊</button>
+            <button id="gk-undo" class="gk-ico" title="悔棋">悔棋</button>
+            <button id="gk-fs" class="gk-ico" title="全屏">⛶</button>
+            <button id="gk-close" class="gk-ico" title="关闭">×</button>
+          </div>
+        </div>
+        <div id="gk-stage" class="gk-stage">
+          <div id="gk-board" class="gk-board"></div>
+          <div id="gk-overlay" class="gk-overlay" hidden>
+            <div class="gk-ov-card">
+              <div id="gk-ov-title" class="gk-ov-title"></div>
+              <div id="gk-ov-body" class="gk-ov-body"></div>
+              <div class="gk-ov-btns">
+                <button id="gk-btn-start" class="gk-btn-primary">开始对局</button>
+                <button id="gk-btn-end" class="gk-btn-secondary" hidden>结束</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="gk-status" class="gk-status"></div>
+        <span id="gk-side-name" style="display:none;"></span>
+      </div>
+    </div>
+
+    <!-- ===== 记忆翻牌面板 ===== -->
+    <div id="chat-memory-panel" class="gk-panel" hidden>
+      <div class="gk-card">
+        <div class="gk-head">
+          <span class="gk-names"><span id="memory-partner-name">TA</span> · 记忆翻牌</span>
+          <div class="gk-tools">
+            <select id="memory-diff" class="gk-diff"></select>
+            <button id="memory-sound" class="gk-ico" title="音效">🔊</button>
+            <button id="memory-fs" class="gk-ico" title="全屏">⛶</button>
+            <button id="memory-close" class="gk-ico" title="关闭">×</button>
+          </div>
+        </div>
+        <div class="mgm-stage gk-stage">
+          <div id="memory-board" class="memory-board"></div>
+          <div id="memory-overlay" class="gk-overlay" hidden>
+            <div class="gk-ov-card">
+              <div id="memory-overlay-title" class="gk-ov-title"></div>
+              <div id="memory-overlay-body" class="gk-ov-body"></div>
+              <div class="gk-ov-btns">
+                <button id="memory-overlay-btn" class="gk-btn-primary">开始</button>
+                <button id="memory-overlay-btn2" class="gk-btn-secondary" hidden>结束</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="gk-status"><span id="memory-turn"></span> <span id="memory-chem"></span> <span id="memory-coin"></span><div id="memory-hint" style="font-size:11px;opacity:.75;margin-top:2px;"></div></div>
+      </div>
+    </div>
+
+    <!-- ===== 四子棋面===== -->
+    <div id="chat-c4-panel" class="gk-panel" hidden>
+      <div class="gk-card">
+        <div class="gk-head">
+          <span class="gk-names"><span id="c4-partner-name">TA</span> · 四子</span>
+          <div class="gk-tools">
+            <button id="c4-sound" class="gk-ico" title="音效">🔊</button>
+            <button id="c4-fs" class="gk-ico" title="全屏">⛶</button>
+            <button id="c4-close" class="gk-ico" title="关闭">×</button>
+          </div>
+        </div>
+        <div id="c4-stage" class="gk-stage">
+          <div id="c4-board" class="c4-board"></div>
+          <div id="c4-overlay" class="gk-overlay" hidden>
+            <div class="gk-ov-card">
+              <div id="c4-ov-title" class="gk-ov-title"></div>
+              <div id="c4-ov-body" class="gk-ov-body"></div>
+              <div class="gk-ov-btns">
+                <button id="c4-btn-start" class="gk-btn-primary">开始</button>
+                <button id="c4-btn-end" class="gk-btn-secondary" hidden>结束</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="c4-status" class="gk-status"><span id="c4-side-name" style="display:none"></span></div>
+      </div>
+    </div>
+
+    <!-- ===== 贪吃蛇面===== -->
+    <div id="chat-snake-panel" class="gk-panel" hidden>
+      <div class="gk-card">
+        <div class="gk-head">
+          <span class="gk-names"><span id="snake-partner-name">TA</span> · 贪吃</span>
+          <div class="gk-tools"><button id="chat-snake-close" class="gk-ico" title="关闭">×</button></div>
+        </div>
+        <div class="poke-card-scroll gk-stage">
+          <canvas id="snake-canvas" class="snake-canvas"></canvas>
+          <div class="snake-score" id="snake-score"></div>
+          <div class="snake-best" id="snake-best" hidden></div>
+          <div class="snake-hint" id="snake-hint"></div>
+          <div class="snake-result" id="snake-result" hidden></div>
+          <div class="snake-controls">
+            <select id="snake-diff" class="gk-diff"><option value="easy">简</option><option value="normal" selected>普</option><option value="hard">困难</option></select>
+            <select id="snake-mode" class="gk-diff"><option value="duo" selected>vs TA</option><option value="pvp">双人对战</option><option value="coop">双人组队</option></select>
+            <select id="snake-food" class="gk-diff"><option value="2" selected>2 食物</option><option value="4">4 食物</option><option value="6">6 食物</option><option value="8">8 食物</option></select>
+            <button id="snake-start" class="gk-btn-primary">开始</button>
+            <button id="snake-restart" class="gk-btn-secondary">再来一局</button>
+            <button id="snake-resume" class="gk-btn-secondary" hidden>继续</button>
+            <button id="snake-pause" class="gk-btn-secondary">暂停</button>
+            <button id="snake-fs" class="gk-btn-secondary">全屏</button>
+            <button id="snake-wall" class="gk-btn-secondary">穿墙</button>
+            <button id="snake-safe" class="gk-btn-secondary">安全</button>
+          </div>
+          <div class="snake-dpad" id="snake-dpad">
+            <button data-dir="up"></button>><button data-dir="left"></button>><button data-dir="down"></button>><button data-dir="right"></button>>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Pong 面板 ===== -->
+    <div id="chat-pong-panel" class="gk-panel" hidden>
+      <div class="gk-card">
+        <div class="gk-head">
+          <span class="gk-names"><span id="pong-partner-name">TA</span> · Pong</span>
+          <div class="gk-tools">
+            <select id="pong-diff" class="gk-diff">
+              <option value="casual">休闲</option>
+              <option value="easy" selected>简单</option>
+              <option value="normal">普通</option>
+              <option value="hard">困难</option>
+            </select>
+            <button id="pong-sound" class="gk-ico" title="音效">🔊</button>
+            <button id="pong-pause" class="gk-ico" title="暂停">⏸</button>
+            <button id="pong-fs" class="gk-ico" title="全屏">⛶</button>
+            <button id="pong-close" class="gk-ico" title="关闭">×</button>
+          </div>
+        </div>
+        <div class="gk-stage">
+          <div class="pong-canvas-box"><canvas id="pong-canvas"></canvas></div>
+          <div id="pong-overlay" class="gk-overlay" hidden>
+            <div class="gk-ov-card">
+              <div id="pong-overlay-title" class="gk-ov-title"></div>
+              <div id="pong-overlay-body" class="gk-ov-body"></div>
+              <div class="gk-ov-btns">
+                <button id="pong-overlay-btn" class="gk-btn-primary">开始</button>
+                <button id="pong-overlay-btn2" class="gk-btn-secondary" hidden>再来一局</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="pong-score" class="gk-status"></div>
+        <div id="pong-hint" style="font-size:11px;color:var(--text-secondary);text-align:center;"></div>
+        <div id="pong-win-tip" style="font-size:11px;color:var(--text-secondary);text-align:center;"></div>
+      </div>
+    </div>
+
+    <!-- ===== 打砖块面板 ===== -->
+    <div id="chat-brick-panel" class="gk-panel" hidden>
+      <div class="gk-card">
+        <div class="gk-head">
+          <span class="gk-names"><span id="brick-partner-name">TA</span> · 打砖块</span>
+          <div class="gk-tools">
+            <select id="brick-diff" class="gk-diff">
+              <option value="easy">简单</option>
+              <option value="normal" selected>普通</option>
+              <option value="hard">困难</option>
+            </select>
+            <button id="brick-sound" class="gk-ico" title="音效">🔊</button>
+            <button id="brick-pause" class="gk-ico" title="暂停">⏸</button>
+            <button id="brick-fs" class="gk-ico" title="全屏">⛶</button>
+            <button id="chat-brick-close" class="gk-ico" title="关闭">×</button>
+          </div>
+        </div>
+        <div class="gk-stage">
+          <div class="brick-canvas-box"><canvas id="brick-canvas"></canvas></div>
+          <div id="brick-overlay" class="gk-overlay" hidden>
+            <div class="gk-ov-card">
+              <div id="brick-overlay-title" class="gk-ov-title"></div>
+              <div id="brick-overlay-body" class="gk-ov-body"></div>
+              <div class="gk-ov-btns">
+                <button id="brick-overlay-btn" class="gk-btn-primary">开始</button>
+                <button id="brick-overlay-close" class="gk-btn-secondary" hidden>关闭小窗</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="brick-score" class="gk-status"></div>
+        <div id="brick-hint" style="font-size:11px;color:var(--text-secondary);text-align:center;"></div>
+        <span id="brick-lives" style="display:none"></span><span id="brick-level" style="display:none"></span><span id="brick-combo" style="display:none"></span><span id="brick-balls" style="display:none"></span><span id="sf-fullscreen" style="display:none"></span>
+      </div>
+    </div>
+
+    <!-- ===== 合作扫雷面板 ===== -->
+    <div id="chat-ms-panel" class="gk-panel" hidden>
+      <div class="gk-card">
+        <div class="gk-head">
+          <span class="gk-names"><span id="ms-partner-name">TA</span> · 合作扫雷</span>
+          <div class="gk-tools">
+            <button id="ms-mode" class="gk-ico" title="模式">🤝</button>
+            <button id="ms-sound" class="gk-ico" title="音效">🔊</button>
+            <button id="ms-fs" class="gk-ico" title="全屏">⛶</button>
+            <button id="ms-close" class="gk-ico" title="关闭">×</button>
+          </div>
+        </div>
+        <div id="ms-stage" class="gk-stage">
+          <div id="ms-board" class="ms-board"></div>
+          <div id="ms-overlay" class="gk-overlay" hidden>
+            <div class="gk-ov-card">
+              <div id="ms-ov-title" class="gk-ov-title"></div>
+              <div id="ms-ov-body" class="gk-ov-body"></div>
+              <div class="gk-ov-btns">
+                <button id="ms-btn-start" class="gk-btn-primary">开始</button>
+                <button id="ms-btn-end" class="gk-btn-secondary" hidden>结束</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="ms-status" class="gk-status"></div>
+        <div id="ms-cur" style="display:none"></div><div id="ms-lives" style="display:none"></div><div id="ms-prog" style="display:none"></div><div id="ms-bag" style="display:none"></div><div id="ms-talk" style="display:none"></div>
+      </div>
+    </div>
+
     <!-- == 核心层 == -->
     <script src="js/config.js"></script>
     <script src="js/utils.js"></script>
@@ -3568,6 +3852,7 @@ html[data-theme="dark"] #cs-transition-overlay{background:radial-gradient(circle
 
     <!-- == 功能模块 == -->
     <script src="js/features/mood.js"></script>
+    <script src="js/features/diary.js"></script>
     <script src="js/features/envelope.js"></script>
     <script src="js/features/moments.js"></script>
     <script src="js/features/album.js"></script>
@@ -3583,6 +3868,19 @@ html[data-theme="dark"] #cs-transition-overlay{background:radial-gradient(circle
     <script src="js/onboarding.js"></script> 
     <script src="js/features/anniversary.js"></script>
     <script src="js/features/period.js"></script>
+    <script src="js/features/garden-mochi-shim.js"></script>
+    <script src="js/wallet.js"></script>
+    <script src="js/features/garden-mochi.js"></script>
+    <script src="js/features/gomoku.js"></script>
+    <script src="js/features/memory-game.js"></script>
+    <script src="js/features/connect-four.js"></script>
+    <script src="js/features/snake-game.js"></script>
+    <script src="js/features/pong.js"></script>
+    <script src="js/features/breakout.js"></script>
+    <script src="js/features/coop-mine.js"></script>
+
+    <script src="js/games-hub.js"></script>
+    <script src="js/features/game-invite.js"></script>
     <script src="js/music-player.js"></script>
     <script src="js/music-listen.js"></script>
     <script src="js/catch-night.js"></script>
@@ -3680,21 +3978,7 @@ html[data-theme="dark"] #cs-transition-overlay{background:radial-gradient(circle
 </script>
 <script>
 function openMomentsWithTransition(){
-
-  var ov=document.getElementById('cs-transition-overlay');
-  if(!ov){openMomentsModal();return;}
-  ov.classList.add('cs-trans-show');
-  requestAnimationFrame(function(){requestAnimationFrame(function(){ov.classList.add('cs-trans-visible');});});
-  setTimeout(function(){
-    var page=document.getElementById('couple-space-page');
-    if(page){page.style.transition='none';}
-    openMomentsModal();
-    setTimeout(function(){if(page){page.style.transition='';} },150);
-  },3700);
-  setTimeout(function(){
-    ov.classList.remove('cs-trans-visible');
-    setTimeout(function(){ov.classList.remove('cs-trans-show');},500);
-  },4000);
+  openMomentsModal();
 }
 </script>
 </body>

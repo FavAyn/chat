@@ -147,6 +147,8 @@ function _renderListContentOnly() {
         } else if (currentSubTab === 'stickers') {
             itemsToRender = stickerLibrary;
             renderType = 'image';
+        } else if (currentSubTab === 'pinyinPhrases') {
+            itemsToRender = customPinyinPhrases;
         }
     } else if (currentMajorTab === 'atmosphere') {
         if (currentSubTab === 'pokes') itemsToRender = customPokes;
@@ -241,6 +243,8 @@ function renderReplyLibrary() {
         } else if (currentSubTab === 'stickers') {
             itemsToRender = stickerLibrary;
             renderType = 'image';
+        } else if (currentSubTab === 'pinyinPhrases') {
+            itemsToRender = customPinyinPhrases;
         }
     } else if (currentMajorTab === 'atmosphere') {
         if (currentSubTab === 'pokes') itemsToRender = customPokes;
@@ -834,6 +838,7 @@ function _renderAtmosphereList(list, items) {
         intros:   new Map(customIntros.map((r,i)   => [r, i])),
         period:   new Map(customPeriodCare.map((r,i) => [r, i])),
         catchNight: new Map(customCatchNight.map((r,i) => [r, i])),
+        pinyinPhrases: new Map(customPinyinPhrases.map((r,i) => [r, i])),
     };
     const frag = document.createDocumentFragment();
     items.forEach((item, idx) => {
@@ -1018,6 +1023,8 @@ function _runDedup() {
     customPeriodCare = cpcDedup.result; totalRemoved += cpcDedup.removedCount;
     const ccnDedup = deduplicateContentArray(customCatchNight);
     customCatchNight = ccnDedup.result; totalRemoved += ccnDedup.removedCount;
+    const cppDedup = deduplicateContentArray(customPinyinPhrases);
+    customPinyinPhrases = cppDedup.result; totalRemoved += cppDedup.removedCount;
     const preEmoji = customEmojis.length;
     customEmojis = [...new Set(customEmojis)];
     totalRemoved += (preEmoji - customEmojis.length);
@@ -1401,6 +1408,7 @@ function deleteItem(index) {
     else if (currentSubTab === 'intros') customIntros.splice(index, 1);
     else if (currentSubTab === 'period') customPeriodCare.splice(index, 1);
     else if (currentSubTab === 'catchNight') customCatchNight.splice(index, 1);
+    else if (currentSubTab === 'pinyinPhrases') customPinyinPhrases.splice(index, 1);
     if (item && ctx.groups) {
         ctx.groups.forEach(g => { if (g.items) g.items = g.items.filter(t => t !== item); });
     }
@@ -1436,6 +1444,7 @@ function editItem(index, oldText) {
     else if (currentSubTab === 'intros') customIntros[index] = newText.trim();
     else if (currentSubTab === 'period') customPeriodCare[index] = newText.trim();
     else if (currentSubTab === 'catchNight') customCatchNight[index] = newText.trim();
+    else if (currentSubTab === 'pinyinPhrases') customPinyinPhrases[index] = newText.trim();
     throttledSaveData();
     renderReplyLibrary();
 }
@@ -2221,6 +2230,8 @@ function _showBatchAddDialog() {
                 ? customPeriodCare.some(r => normalizeStringStrict(r) === norm)
                 : currentSubTab === 'catchNight'
                 ? customCatchNight.some(r => normalizeStringStrict(r) === norm)
+                : currentSubTab === 'pinyinPhrases'
+                ? customPinyinPhrases.some(r => normalizeStringStrict(r) === norm)
                 : false;
             if (isDup) { skipped++; return; }
             if (currentSubTab === 'custom') { customReplies.push(val); newItems.push(val); }
@@ -2229,6 +2240,7 @@ function _showBatchAddDialog() {
             else if (currentSubTab === 'mottos') customMottos.push(val);
             else if (currentSubTab === 'period') customPeriodCare.push(val);
             else if (currentSubTab === 'catchNight') customCatchNight.push(val);
+            else if (currentSubTab === 'pinyinPhrases') customPinyinPhrases.push(val);
             added++;
         });
         if (_selectedGroupIdx >= 0 && newItems.length > 0 && groups) {
@@ -2375,7 +2387,7 @@ function initReplyLibraryListeners() {
                 }
                 return;
             }
-            if (currentSubTab === 'custom' || currentSubTab === 'pokes' || currentSubTab === 'statuses' || currentSubTab === 'period') {
+            if (currentSubTab === 'custom' || currentSubTab === 'pokes' || currentSubTab === 'statuses' || currentSubTab === 'period' || currentSubTab === 'pinyinPhrases') {
                 _showBatchAddDialog(); return;
             }
             if (currentSubTab === 'surveyBank') {
@@ -2402,12 +2414,14 @@ function initReplyLibraryListeners() {
                 else if (currentSubTab === 'mottos' && customMottos.some(r => normalizeStringStrict(r) === valNorm)) isDup = true;
                 else if (currentSubTab === 'intros' && customIntros.some(r => normalizeStringStrict(r) === valNorm)) isDup = true;
                 else if (currentSubTab === 'catchNight' && customCatchNight.some(r => normalizeStringStrict(r) === valNorm)) isDup = true;
+                else if (currentSubTab === 'pinyinPhrases' && customPinyinPhrases.some(r => normalizeStringStrict(r) === valNorm)) isDup = true;
                 if (isDup) { showNotification('该内容已存在', 'warning'); return; }
                 if (currentSubTab === 'pokes') customPokes.unshift(val);
                 else if (currentSubTab === 'statuses') customStatuses.unshift(val);
                 else if (currentSubTab === 'mottos') customMottos.unshift(val);
                 else if (currentSubTab === 'intros') customIntros.unshift(val);
                 else if (currentSubTab === 'catchNight') customCatchNight.unshift(val);
+                else if (currentSubTab === 'pinyinPhrases') customPinyinPhrases.unshift(val);
                 throttledSaveData(); renderReplyLibrary();
                 showNotification('✓ 添加成功', 'success');
             }
@@ -2416,7 +2430,7 @@ function initReplyLibraryListeners() {
 }
 
 function getCategoryName(tabId) {
-    return { custom: '回复', pokes: '拍一拍', statuses: '状态', mottos: '格言', intros: '开场语', period: '相关字卡', catchNight: '抓熬夜通知' }[tabId] || '内容';
+    return { custom: '回复', pokes: '拍一拍', statuses: '状态', mottos: '格言', intros: '开场语', period: '相关字卡', catchNight: '抓熬夜通知', pinyinPhrases: '拼音短句' }[tabId] || '内容';
 }
 
 function updateTabUI() {

@@ -11,24 +11,33 @@
   function saveState() { try { localStorage.setItem(ENABLED_KEY, enabled ? '1' : '0'); } catch (e) {} }
 
   var KEY = PREFIX + 'catchNightTemplates';
+  // 模板按组区分（前缀标签）：[模式]=开启熬夜模式通知、[切后台]=切后台通知、[12小时]=超12小时通知。
+  // 同组可写多条，触发时"组内随机"挑一条。
+  var TAG = { modeOn: '[模式]', backShort: '[切后台]', backLong: '[12小时]' };
   var DEFAULT_TEMPLATES = [
-    '开启熬夜检测，今晚要一起好好睡觉哦',
-    '已经 20 分钟没有入睡，还在玩手机，快去催催吧',
-    '把界面切到后台 {mins} 分钟，疑似悄悄熬夜，快去抓人',
-    '把界面切到后台超过 12 小时，都不太敢回来了…',
-    '已经乖乖入睡啦，今晚也睡个好觉',
-    '我开启了熬夜模式，今晚不检测啦，别来抓我'
+    '[模式]我开启了熬夜模式，今晚不检测啦，别来抓我',
+    '[切后台]把界面切到后台 {mins} 分钟，疑似悄悄熬夜，快去抓人',
+    '[切后台]又偷偷切后台 {mins} 分钟，还不快点去睡',
+    '[12小时]把界面切到后台超过 12 小时，都不太敢回来了…'
   ];
   var templates = [];
   function loadTemplates() {
-    try {
-      var v = localStorage.getItem(KEY);
-      if (v) { templates = JSON.parse(v); if (!Array.isArray(templates)) templates = []; }
-      else templates = DEFAULT_TEMPLATES.slice();
-    } catch (e) { templates = DEFAULT_TEMPLATES.slice(); }
+    var arr = null;
+    try { var v = localStorage.getItem(KEY); if (v) { arr = JSON.parse(v); if (!Array.isArray(arr)) arr = null; } } catch (e) { arr = null; }
+    if (!arr) { templates = DEFAULT_TEMPLATES.slice(); return; }
+    // 兼容旧数据：若无任何 [标签]，按顺序迁移（第1→模式、第2→切后台、第3→12小时，其余归切后台）
+    var hasTag = arr.some(function (t) { return /^\[[^\]]*\]/.test(String(t)); });
+    if (!hasTag && arr.length) {
+      var order = [TAG.modeOn, TAG.backShort, TAG.backLong];
+      arr = arr.map(function (t, i) { return (order[i] || TAG.backShort) + String(t); });
+      try { localStorage.setItem(KEY, JSON.stringify(arr)); } catch (e) {}
+    }
+    templates = arr;
   }
   function saveTemplates() { try { localStorage.setItem(KEY, JSON.stringify(templates)); } catch (e) {} }
-  // 模板不再自动填 {name}，只替换 {mins}（时长）
+  // 去掉前缀标签
+  function stripTag(s) { return String(s).replace(/^\[[^\]]*\]\s*/, ''); }
+  // 只替换 {mins}（时长）
   function fillTemplate(tpl, mins) { return String(tpl).replace(/\{mins\}/g, (mins != null ? mins : 0)); }
 
   window.catchNight = {
@@ -72,9 +81,14 @@
   }
   function pickupTemplate(kind, mins) {
     loadTemplates();
-    var idxMap = { start: 0, touch20: 1, backShort: 2, backLong: 3, sleep: 4, modeOn: 5 };
-    var i = (idxMap[kind] != null) ? idxMap[kind] : 0;
-    return fillTemplate(templates[i] || DEFAULT_TEMPLATES[i] || '', mins);
+    var tag = TAG[kind];
+    if (!tag) return '';
+    // 从"该组"的模板里随机取一条（同组多条就随机，每次不一样）
+    var pool = templates.filter(function (t) { return String(t).indexOf(tag) === 0; });
+    if (!pool.length) pool = DEFAULT_TEMPLATES.filter(function (t) { return String(t).indexOf(tag) === 0; });
+    if (!pool.length) return '';
+    var pick = pool[Math.floor(Math.random() * pool.length)];
+    return fillTemplate(stripTag(pick), mins);
   }
 
   function onCompanionStart() {

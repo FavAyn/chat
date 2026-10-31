@@ -1,0 +1,195 @@
+﻿/* 浜斿瓙妫嬮潰鏉匡紙milk 椋庢牸锛岄厤鍚堣█搴?gomoku.js 浣跨敤锛?*/
+.gk-panel { position: fixed; inset: 0; z-index: 1550; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; padding: 16px; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+.gk-panel[hidden] { display: none !important; }
+.gk-card { background: var(--secondary-bg); border: 1px solid var(--border-color); border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,.25); width: min(460px, 100%); max-height: 92vh; display: flex; flex-direction: column; overflow: hidden; }
+.gk-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
+.gk-names { font-size: 14px; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gk-tools { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.gk-diff { font-size: 12px; padding: 4px 6px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--primary-bg); color: var(--text-primary); outline: none; font-family: inherit; }
+.gk-ico { min-width: 28px; height: 28px; padding: 0 8px; border-radius: 8px; border: none; background: rgba(var(--accent-color-rgb),.1); color: var(--accent-color); font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit; }
+.gk-ico:hover { background: rgba(var(--accent-color-rgb),.2); }
+.gk-stage { position: relative; display: flex; align-items: center; justify-content: center; padding: 14px; flex: 1; min-height: 0; overflow: auto; }
+.gk-board { display: grid; grid-template-columns: repeat(11, 1fr); background: #e8d3b0; border-radius: 8px; padding: 2px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
+.gk-cell { display: flex; align-items: center; justify-content: center; position: relative; box-sizing: border-box; border-right: 1px solid rgba(0,0,0,.12); border-bottom: 1px solid rgba(0,0,0,.12); }
+.gk-cell:hover { background: rgba(0,0,0,.04); }
+.gk-stone { width: 78%; height: 78%; border-radius: 50%; display: block; }
+.gk-you { background: radial-gradient(circle at 35% 30%, #555, #111); }
+.gk-ta { background: radial-gradient(circle at 35% 30%, #fff, #ccc); box-shadow: inset 0 0 0 1px rgba(0,0,0,.1); }
+.gk-last { box-shadow: 0 0 0 2px var(--accent-color); }
+.gk-win { box-shadow: 0 0 0 2px #ff5252; }
+.gk-drop { animation: gkDrop .18s ease; }
+@keyframes gkDrop { from { transform: scale(.4); opacity: .4; } to { transform: scale(1); opacity: 1; } }
+.gk-board.gk-dim .gk-stone:not(.gk-win) { opacity: .35; }
+.gk-overlay { position: absolute; inset: 0; background: rgba(255,255,255,.92); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 5; }
+html[data-theme="dark"] .gk-overlay { background: rgba(30,30,30,.92); }
+.gk-overlay[hidden] { display: none !important; }
+.gk-ov-card { text-align: center; max-width: 320px; }
+.gk-ov-title { font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; }
+.gk-ov-body { font-size: 12.5px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px; }
+.gk-ov-btns { display: flex; gap: 10px; justify-content: center; }
+.gk-btn-primary { padding: 9px 20px; border: none; border-radius: 12px; background: var(--accent-color); color: var(--message-sent-text); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.gk-btn-secondary { padding: 9px 20px; border: 1px solid var(--border-color); border-radius: 12px; background: var(--primary-bg); color: var(--text-secondary); font-size: 13px; cursor: pointer; font-family: inherit; }
+.gk-status { padding: 10px 14px; font-size: 12px; color: var(--text-secondary); text-align: center; border-top: 1px solid var(--border-color); flex-shrink: 0; min-height: 16px; }
+.tg-bubble { position: absolute; top: 6px; left: 50%; transform: translateX(-50%); background: rgba(var(--accent-color-rgb),.92); color: #fff; font-size: 12px; padding: 5px 12px; border-radius: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 6; white-space: nowrap; }
+.tg-bubble.show { opacity: 1; }
+.ms-diffs { display: flex; gap: 6px; justify-content: center; margin-bottom: 10px; flex-wrap: wrap; }
+.ms-diff { padding: 5px 12px; border: 1px solid var(--border-color); border-radius: 16px; background: var(--primary-bg); color: var(--text-secondary); font-size: 12px; cursor: pointer; font-family: inherit; }
+.ms-diff.on { background: rgba(var(--accent-color-rgb),.15); color: var(--accent-color); border-color: var(--accent-color); }
+.ms-cur { font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; }
+.c4-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: middle; margin: 0 2px; }
+.c4-dot-you { background: #222; }
+.c4-dot-ta { background: #fff; box-shadow: inset 0 0 0 1px #bbb; }
+.c4-start-tip, .c4-start-note { font-size: 11.5px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 6px; }
+.pong-end-stat { margin-top: 8px; font-size: 12px; color: var(--text-secondary); }
+.gk-panel.game-fs .gk-card { width: 100%; height: 100%; max-height: 100%; border-radius: 0; }
+
+/* ===== 璁板繂缈荤墝 ===== */
+#memory-board{display:grid;gap:7px;justify-content:center;margin:0 auto;width:100%;max-width:100%;}
+.mgm-card{position:relative;border:none;background:none;padding:0;cursor:pointer;perspective:700px;}
+.mgm-card::before{content:'';display:block;padding-top:136%;}
+.mgm-in{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .4s;}
+.mgm-card.flipped .mgm-in{transform:rotateY(180deg);}
+.mgm-back,.mgm-face{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:10px;backface-visibility:hidden;-webkit-backface-visibility:hidden;font-size:var(--mgm-fs,24px);line-height:1;}
+.mgm-back{background:linear-gradient(135deg,rgba(var(--accent-color-rgb),.9),rgba(var(--accent-color-rgb),.6));color:#fff;}
+.mgm-back i{font-style:normal;font-size:.6em;opacity:.8;}
+.mgm-face{background:var(--primary-bg);border:1px solid var(--border-color);transform:rotateY(180deg);}
+.mgm-card.matched .mgm-face{background:rgba(var(--accent-color-rgb),.12);border-color:var(--accent-color);}
+.mgm-own-p .mgm-face{box-shadow:0 0 0 2px var(--accent-color);}
+.mgm-own-t .mgm-face{box-shadow:0 0 0 2px #bdbdbd;}
+.pong-start-ctrl,.pong-start-tip{font-size:12px;color:var(--text-secondary);line-height:1.6;margin-bottom:6px;}
+.pong-end-stat,.pong-end-score{font-size:12px;color:var(--text-secondary);margin-top:6px;}
+.snake-icon-btn{min-width:28px;height:28px;padding:0 6px;border-radius:8px;border:none;background:rgba(var(--accent-color-rgb),.1);color:var(--accent-color);font-size:13px;cursor:pointer;font-family:inherit;}
+
+/* ===== 鍥涘瓙妫?===== */
+.c4-board{box-sizing:border-box;max-width:100%;display:flex;gap:6px;justify-content:center;margin:0 auto;background:#e8d3b0;padding:6px;border-radius:12px;}
+.c4-col{flex:1;display:flex;flex-direction:column;gap:6px;cursor:pointer;}
+.c4-cell{width:100%;aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;position:relative;box-shadow:inset 0 1px 3px rgba(0,0,0,.15);}
+.c4-col:hover .c4-cell{background:rgba(255,255,255,.97);}
+.c4-disc{width:88%;height:88%;border-radius:50%;display:block;transition:transform .18s ease;}
+.c4-you{background:radial-gradient(circle at 35% 30%,#ff8a80,#d32f2f);}
+.c4-ta{background:radial-gradient(circle at 35% 30%,#fff59d,#f9a825);}
+.c4-wincol .c4-cell{box-shadow:0 0 0 2px var(--accent-color) inset;}
+.c4-win{box-shadow:0 0 0 2px #fff inset;}
+.c4-start-tip,.c4-start-note{font-size:11.5px;color:var(--text-secondary);line-height:1.6;margin-bottom:6px;}
+
+/* ===== 贪吃蛇 ===== */
+#chat-snake-panel .poke-card-scroll{display:flex;flex-direction:column;align-items:center;gap:8px;overflow:auto;}
+.snake-canvas{display:block;background:#0f1621;border-radius:8px;touch-action:none;max-width:100%;}
+.snake-score{font-size:12px;color:var(--text-secondary);}
+.snake-best{font-size:11px;color:var(--accent-color);}
+.snake-hint{font-size:11.5px;color:var(--text-secondary);text-align:center;}
+.snake-result{font-size:13px;text-align:center;color:var(--text-primary);}
+.snake-controls{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;}
+.snake-controls select,.snake-controls button{font-family:inherit;font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);cursor:pointer;}
+.snake-controls button.on{background:rgba(var(--accent-color-rgb),.15);border-color:var(--accent-color);color:var(--accent-color);}
+.snake-dpad{display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(2,44px);gap:6px;justify-content:center;}
+.snake-dpad button{border:none;border-radius:10px;background:rgba(var(--accent-color-rgb),.12);color:var(--accent-color);font-size:18px;cursor:pointer;}
+.snake-dpad button[data-dir="up"]{grid-column:2;grid-row:1;}
+.snake-dpad button[data-dir="left"]{grid-column:1;grid-row:2;}
+.snake-dpad button[data-dir="down"]{grid-column:2;grid-row:2;}
+.snake-dpad button[data-dir="right"]{grid-column:3;grid-row:2;}
+#chat-snake-panel.snake-fs{align-items:stretch;justify-content:stretch;padding:0;}
+#chat-snake-panel.snake-fs .gk-card{width:100%;max-width:100%;height:100vh;max-height:100vh;border-radius:0;}
+
+/* ===== 连连看 ===== */
+.lk-board{display:grid;gap:3px;justify-content:center;margin:0 auto;}
+.lk-tile{display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--primary-bg);border:1px solid var(--border-color);cursor:pointer;user-select:none;box-sizing:border-box;}
+.lk-tile.lk-gone{visibility:hidden;pointer-events:none;}
+.lk-tile.lk-sel{border-color:var(--accent-color);box-shadow:0 0 0 2px rgba(var(--accent-color-rgb),.35);background:rgba(var(--accent-color-rgb),.1);}
+.lk-tile.lk-hint{box-shadow:0 0 0 2px #ffb300;}
+.lk-shufin{animation:lkpop .3s;}
+.lk-shufout{opacity:.3;}
+@keyframes lkpop{0%{transform:scale(.8)}100%{transform:scale(1)}}
+#chat-linkup-panel.game-fs{align-items:stretch;justify-content:stretch;padding:0;}
+#chat-linkup-panel.game-fs .gk-card{width:100%;max-width:100%;height:100vh;max-height:100vh;border-radius:0;}
+
+/* ===== Pong ===== */
+#chat-pong-panel .gk-stage{display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.pong-canvas-box{position:relative;display:flex;align-items:center;justify-content:center;}
+#pong-canvas{display:block;background:#0f1621;border-radius:8px;touch-action:none;max-width:100%;}
+#chat-pong-panel.pong-fs{align-items:stretch;justify-content:stretch;padding:0;}
+#chat-pong-panel.pong-fs .gk-card{width:100%;max-width:100%;height:100vh;max-height:100vh;border-radius:0;}
+
+/* ===== 打砖块 ===== */
+#chat-brick-panel .gk-stage{display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.brick-canvas-box{position:relative;display:flex;align-items:center;justify-content:center;}
+#brick-canvas{display:block;background:#0f1621;border-radius:8px;touch-action:none;max-width:100%;}
+#chat-brick-panel.brick-fs{align-items:stretch;justify-content:stretch;padding:0;}
+#chat-brick-panel.brick-fs .gk-card{width:100%;max-width:100%;height:100vh;max-height:100vh;border-radius:0;}
+/* ===== 合作扫雷 ===== */
+.ms-board{display:grid;gap:3px;justify-content:center;margin:0 auto;}
+.ms-cell{display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--primary-bg);border:1px solid var(--border-color);cursor:pointer;user-select:none;box-sizing:border-box;position:relative;font-size:14px;}
+.ms-cell.ms-open{background:rgba(var(--accent-color-rgb),.06);cursor:default;}
+.ms-cell.ms-boom{background:rgba(255,80,80,.25);}
+.ms-cell.ms-tr{background:rgba(255,200,60,.15);}
+.ms-face{font-size:inherit;line-height:1;}
+.ms-diffs{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px;}
+.ms-diff{font-family:inherit;font-size:12px;padding:5px 10px;border-radius:8px;border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);cursor:pointer;}
+.ms-diff.on{background:rgba(var(--accent-color-rgb),.15);border-color:var(--accent-color);color:var(--accent-color);}
+#chat-ms-panel.game-fs{align-items:stretch;justify-content:stretch;padding:0;}
+#chat-ms-panel.game-fs .gk-card{width:100%;max-width:100%;height:100vh;max-height:100vh;border-radius:0;}
+
+/* ===== 游戏邀请确认 ===== */
+.gi-overlay{position:fixed;inset:0;z-index:2700;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px;}
+.gi-card{background:var(--primary-bg);border-radius:16px;padding:20px;max-width:320px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.25);}
+.gi-title{font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:10px;}
+.gi-body{font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:16px;}
+.gi-btns{display:flex;gap:10px;justify-content:flex-end;}
+.gi-btns button{font-family:inherit;font-size:13px;padding:8px 16px;border-radius:10px;border:none;cursor:pointer;}
+.gi-ok{background:var(--accent-color);color:#fff;}
+.gi-no{background:rgba(var(--accent-color-rgb),.1);color:var(--accent-color);}
+
+/* ===== 心意集市 ===== */
+.market-list{display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow:auto;}
+.market-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:rgba(var(--accent-color-rgb),.06);}
+.market-ico{font-size:20px;}
+.market-name{flex:1;font-size:13px;color:var(--text-primary);}
+.market-price{font-size:12px;color:var(--text-secondary);}
+.market-buy{font-family:inherit;font-size:12px;padding:6px 12px;border-radius:8px;border:none;background:var(--accent-color);color:#fff;cursor:pointer;}
+
+/* ===== 写信界面强制隐藏（只有加 .show 才显示） ===== */
+#env-compose-form{display:none !important;}
+#env-compose-form.show{display:block !important;}
+
+#env-main-close-btn{display:none !important;}
+#env-main-close-btn.show{display:flex !important;}
+
+#envelope-modal:not(.show){display:none !important;}
+
+/* ===== 日记 ===== */
+#diary-list{padding:0 4px;}
+.diary-day{background:var(--primary-bg);border:1px solid var(--border-color);border-radius:12px;padding:12px 14px;margin-bottom:10px;}
+.diary-date-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.diary-date{font-size:12px;color:var(--text-secondary);letter-spacing:.5px;}
+.diary-edit{font-family:inherit;font-size:11px;padding:4px 10px;border-radius:8px;border:none;background:rgba(var(--accent-color-rgb),.12);color:var(--accent-color);cursor:pointer;}
+.diary-entry{display:flex;gap:8px;margin-top:6px;line-height:1.7;}
+.diary-who{flex-shrink:0;font-size:11px;font-weight:600;padding:1px 6px;border-radius:6px;height:fit-content;}
+.diary-who-me{background:rgba(var(--accent-color-rgb),.15);color:var(--accent-color);}
+.diary-who-ta{background:rgba(120,120,200,.15);color:#7b7bd0;}
+.diary-text{font-size:13px;color:var(--text-primary);white-space:pre-wrap;word-break:break-word;}
+
+/* 日记 tab 图标（书本） */
+#csp-diary .cs-pill-icon{ -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 19.5A2.5 2.5 0 016.5 17H20'/%3E%3Cpath d='M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 19.5A2.5 2.5 0 016.5 17H20'/%3E%3Cpath d='M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z'/%3E%3C/svg%3E"); }
+
+/* 日记时间轴 */
+#diary-list{padding:0 4px;}
+.diary-timeline{position:relative;padding-left:18px;}
+.diary-timeline::before{content:'';position:absolute;left:5px;top:8px;bottom:8px;width:2px;background:rgba(var(--accent-color-rgb),.2);}
+.diary-node{position:relative;margin-bottom:14px;}
+.diary-node-dot{position:absolute;left:-17px;top:8px;width:10px;height:10px;border-radius:50%;background:var(--accent-color);border:2px solid var(--primary-bg);box-shadow:0 0 0 1px rgba(var(--accent-color-rgb),.3);}
+.diary-emoji{font-size:18px;line-height:1;margin-right:6px;}
+
+.diary-node-flash .diary-day{box-shadow:0 0 0 2px var(--accent-color);transition:box-shadow .3s;}
+.diary-day{transition:box-shadow .3s;}
+
+/* 日记手机适配 */
+@media (max-width: 768px){
+  #diary-list{padding:0 2px;}
+  .diary-timeline{padding-left:14px;}
+  .diary-timeline::before{left:4px;}
+  .diary-node-dot{left:-15px;}
+  .diary-day{padding:10px 12px;}
+  #diary-editor .gi-card{max-width:92vw;}
+  #diary-jump-wrap{flex-wrap:wrap;}
+  #diary-jump{min-width:0;}
+}

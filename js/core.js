@@ -239,6 +239,8 @@ function loadMoreFuture() {
                 typingIndicatorEnabled: true,
                 readReceiptsEnabled: true,
                 replyEnabled: true,
+                pinyinMode: false,      // 拼音模式：约20%概率用拼音串取代字卡
+                correctMode: false,     // 纠错模式：把拼音串纠正成有逻辑的中文
                 lastStatusChange: Date.now(),
                 nextStatusChange: 1 + Math.random() * 7,
                 fontSize: 16,
@@ -515,6 +517,16 @@ const loadData = async () => {
 
         customPeriodCare = savedPeriodCare || [];  // 没有内置预设，用户没配置就是空数组
 
+        // 拼音短句池：从 localStorage 读取（回复库管理可编辑），无则用内置默认
+        try {
+            var _ppKey = (typeof window.APP_PREFIX === 'string' ? window.APP_PREFIX : 'CHAT_APP_V3_') + 'pinyinPhrases';
+            var _ppRaw = localStorage.getItem(_ppKey);
+            if (_ppRaw) { var _ppArr = JSON.parse(_ppRaw); if (Array.isArray(_ppArr)) customPinyinPhrases = _ppArr; }
+            if (!customPinyinPhrases || !customPinyinPhrases.length) {
+                customPinyinPhrases = ['wo ai ni','xiang ni le','wo ye xiang ni','zao dian shui','wan an','bie zou hao ma','wo zai ne','ni zai gan ma','kuai shui ba','wo deng ni','bie pa you wo','ni hao ma','wo hao xiang ni','hao hao xiu xi','yao hao hao de'];
+            }
+        } catch (e) { customPinyinPhrases = ['wo ai ni','xiang ni le','zao dian shui','wan an']; }
+
         // 抓熬夜通知模板：从 catch-night 模块的 localStorage 键读取（氛围感配置用）
         try {
             if (window.catchNight && window.catchNight.getTemplates) customCatchNight = window.catchNight.getTemplates();
@@ -761,7 +773,8 @@ const LIBRARY_CONFIG = {
         tabs: [
             { id: 'custom', name: '主字卡', mode: 'list' },
             { id: 'emojis', name: 'Emoji', mode: 'grid' },
-            { id: 'stickers', name: '表情库', mode: 'grid' }
+            { id: 'stickers', name: '表情库', mode: 'grid' },
+            { id: 'pinyinPhrases', name: '拼音短句', mode: 'list' }
         ]
     },
     atmosphere: {
@@ -1030,8 +1043,11 @@ const saveData = async () => {
         { key: 'customIntros',           val: () => localforage.setItem(getStorageKey('customIntros'), customIntros) },
         { key: 'customPeriodCare',       val: () => localforage.setItem(getStorageKey('customPeriodCare'), customPeriodCare) },
         { key: 'customCatchNight',       val: () => {
-            const v = (typeof window !== 'undefined' && window.catchNight && window.catchNight.getTemplates) ? window.catchNight.getTemplates() : window.customCatchNight;
-            if (window.catchNight && window.catchNight.setTemplates) window.catchNight.setTemplates(v);
+            // 把氛围感里编辑的 customCatchNight 同步给 catch-night 模块（否则编辑不生效）
+            if (window.catchNight && window.catchNight.setTemplates) window.catchNight.setTemplates(customCatchNight);
+        } },
+        { key: 'customPinyinPhrases',    val: () => {
+            try { localStorage.setItem((typeof window.APP_PREFIX === 'string' ? window.APP_PREFIX : 'CHAT_APP_V3_') + 'pinyinPhrases', JSON.stringify(customPinyinPhrases)); } catch (e) {}
         } },
         { key: 'stickerLibrary',         val: () => localforage.setItem(getStorageKey('stickerLibrary'), stickerLibrary) },
         { key: 'myStickerLibrary',       val: () => localforage.setItem(getStorageKey('myStickerLibrary'), myStickerLibrary) },
@@ -2375,6 +2391,21 @@ if (!isBatchMode && type === 'normal') {
         };
 
         window.simulateReply = function() {
+            // 拼音模式：自定义短句池（整句、读得懂）与散音节乱拼混合，更像"信号时好时坏"
+            function genPinyinStr() {
+                // 短句池来自"回复库管理 → 拼音短句"（用户可自定义），空则用默认
+                var phrases = (typeof customPinyinPhrases !== 'undefined' && customPinyinPhrases && customPinyinPhrases.length)
+                    ? customPinyinPhrases : ['wo ai ni','xiang ni le','zao dian shui','wan an'];
+                // 约 20% 概率整句；否则散音节乱拼（信号不稳）
+                if (Math.random() < 0.2) {
+                    return String(phrases[Math.floor(Math.random() * phrases.length)]).trim();
+                }
+                var syl = ['ni','hao','wo','xiang','ni','zai','ma','jin','tian','xin','hao','bu','wen','ai','ni','de','ming','zi','kuai','le','shui','jiao','xiang','ni','le','wo','zhi','dao','bie','pa','you','wo','zai','shen','me','shi','hou','dou','hui','pei','zhe','ni','zhen','de','hen','xiang','ni','de','wei','dao','tai','xi','huan','ni','xiao','de','yang','zi','bie','zou','hao','ma','deng','ni','hui','lai','xiang','ni','le','kuai','shui','ba','wan','an','zao','dian','xiu','xi','hao','xiang','ni'];
+                var n = 3 + Math.floor(Math.random() * 6);
+                var arr = [];
+                for (var i = 0; i < n; i++) arr.push(syl[Math.floor(Math.random() * syl.length)]);
+                return arr.join(' ');
+            }
             function showTypingIndicator() {
                 if (!settings.typingIndicatorEnabled) return;
                 const tiWrapper = document.getElementById('typing-indicator-wrapper');
@@ -2509,6 +2540,13 @@ if (partnerPersonas && partnerPersonas.length > 0 && Math.random() < 0.3) {
                         } else {
                             separateEmoji = emoji;
                         }
+                    }
+
+                    // 拼音模式：约 20% 概率把这条回复换成拼音串；
+                    // 纠错模式开启时，"纠正"成有逻辑的中文（即保持正常字卡不替换）
+                    if (settings.pinyinMode && Math.random() < 0.2 && !settings.correctMode) {
+                        finalText = genPinyinStr();
+                        separateEmoji = null;
                     }
 
                     addMessage({

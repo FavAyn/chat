@@ -21,8 +21,14 @@
   var ENABLED_KEY = 'musicListenEnabled';
   var enabled = true;            // TA 也能主动邀请（可关闭）
 
-  // 用你自定义的对方昵称（settings.partnerName），未设置时兜底"对方"
-  function pname() { try { return window.MilkMusic && window.MilkMusic.partnerName ? window.MilkMusic.partnerName() : '对方'; } catch (e) { return '对方'; } }
+  // 用你自定义的对方昵称：settings.partnerName → 顶部昵称元素 → 兜底"对方"
+  function pname() {
+    try {
+      var s = (typeof settings !== 'undefined' && settings.partnerName) ? settings.partnerName : '';
+      if (!s) { var el = document.getElementById('partner-name'); if (el && el.textContent && el.textContent.trim()) s = el.textContent.trim(); }
+      return s || '对方';
+    } catch (e) { return '对方'; }
+  }
   function startTogetherRec(name) { try { if (window.MilkMusic && window.MilkMusic.startTogether) window.MilkMusic.startTogether(name); } catch (e) {} }
   function stopTogetherRec() { try { if (window.MilkMusic && window.MilkMusic.stopTogether) window.MilkMusic.stopTogether(); } catch (e) {} }
   function myname() { return (typeof settings !== 'undefined' && settings.myName) || '我'; }
@@ -173,6 +179,7 @@
         '<div class="ml-tg-head" id="ml-tg-drag">' +
           '<span class="ml-tg-label">一起听中</span>' +
           '<span class="ml-tg-ico"><i class="fas fa-headphones"></i></span>' +
+          '<button class="ml-tg-btn" id="ml-tg-hide" title="隐藏（不结束一起听）" style="margin-left:auto;"><i class="fas fa-times"></i></button>' +
         '</div>' +
         '<div class="ml-tg-body">' +
           '<div class="ml-tg-cover" id="ml-tg-cover"><i class="fas fa-music"></i></div>' +
@@ -204,14 +211,9 @@
   }
   function showTogether(song) {
     togetherSong = song;
-    phase = 'together';
-    var cover = document.getElementById('ml-tg-cover');
-    if (cover) { if (song.cover) { cover.className = 'ml-tg-cover has-cov'; cover.style.backgroundImage = 'url(' + song.cover + ')'; cover.innerHTML = ''; } else { cover.className = 'ml-tg-cover'; cover.style.backgroundImage = ''; cover.innerHTML = '<i class="fas fa-music"></i>'; } }
-    var n = document.getElementById('ml-tg-song'); if (n) n.textContent = '《' + song.name + '》';
-    var w = document.getElementById('ml-tg-who'); if (w) w.textContent = '和 ' + pname() + ' 一起听';
-    var t = document.getElementById('ml-together'); if (t) t.classList.add('show');
-    syncTogetherPlay();
-    startTogetherRec(song.name);   // 开始记录一起听
+    // 不再弹"一起听中"小窗，只记录开始一起听；通知已在调用处发到聊天
+    startTogetherRec(song.name);
+    active = false; phase = 'idle';
   }
   function syncTogetherPlay() {
     var pe = document.getElementById('ml-tg-play'); if (!pe) return;
@@ -373,6 +375,12 @@
 
     var endBtn = document.getElementById('ml-tg-end');
     if (endBtn) endBtn.addEventListener('click', endTogether);
+    // 隐藏一起听框（不结束一起听，音乐继续）；再次点音乐/进音乐页可重新唤出
+    var hideBtn = document.getElementById('ml-tg-hide');
+    if (hideBtn) hideBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var t = document.getElementById('ml-together'); if (t) t.classList.remove('show');
+    });
     var playBtn = document.getElementById('ml-tg-play');
     if (playBtn) playBtn.addEventListener('click', function () { if (window.MilkMusic && window.MilkMusic.toggle) { try { window.MilkMusic.toggle(); } catch (e) {} setTimeout(syncTogetherPlay, 80); } });
     var nextBtn = document.getElementById('ml-tg-next');

@@ -1236,7 +1236,9 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
                 '#typing-indicator-toggle': {
                     prop: 'typingIndicatorEnabled', name: '正在输入'},
                     '#read-no-reply-toggle': { prop: 'allowReadNoReply', name: '已读不回' },
-                    '#emoji-mix-toggle': { prop: 'emojiMixEnabled', name: '表情混入消息' }
+                    '#emoji-mix-toggle': { prop: 'emojiMixEnabled', name: '表情混入消息' },
+                    '#pinyin-mode-toggle': { prop: 'pinyinMode', name: '拼音模式' },
+                    '#correct-mode-toggle': { prop: 'correctMode', name: '纠错模式' }
 };
 
             for (const [selector, {
@@ -1644,9 +1646,9 @@ autoSendSlider.addEventListener('change', () => {
         document.getElementById('env-outbox-section').style.display = 'block';
         document.getElementById('env-inbox-section').style.display = 'none';
         document.getElementById('env-compose-form').style.display = 'none';
-        document.getElementById('env-main-close-btn').style.display = 'flex';
+        document.getElementById('env-main-close-btn').classList.add('show');
         renderEnvelopeLists();
-        showModal(document.getElementById('envelope-modal'));
+        var _em=document.getElementById('envelope-modal'); _em.classList.add('show'); showModal(_em);
     }
     if (envelopeEntryBtn) {
         envelopeEntryBtn.addEventListener('click', openEnvelopeModal);
@@ -1669,8 +1671,26 @@ if (_sendEnvEl) _sendEnvEl.addEventListener('click', handleSendEnvelope);
 
 const _cancelEnvEl = document.getElementById('cancel-envelope');
 if (_cancelEnvEl) _cancelEnvEl.addEventListener('click', () => {
-    hideModal(document.getElementById('envelope-modal'));
+    var _em2=document.getElementById('envelope-modal'); if(_em2) _em2.classList.remove('show'); hideModal(_em2);
 });
+
+// 写信界面：显示/隐藏（原 index 里 onclick 调用的函数缺失，补上）
+window.openNewEnvelopeForm = function () {
+    var f = document.getElementById('env-compose-form');
+    if (f) { f.style.display = ''; f.classList.add('show'); }
+    var a = document.getElementById('env-main-close-btn');
+    if (a) a.classList.remove('show');
+    var t = document.getElementById('envelope-input');
+    if (t) { t.value = ''; t.focus(); }
+    var info = document.getElementById('env-reply-time-info');
+    if (info) info.textContent = '传递你的心意吧';
+};
+window.cancelEnvelopeCompose = function () {
+    var f = document.getElementById('env-compose-form');
+    if (f) f.classList.remove('show');
+    var a = document.getElementById('env-main-close-btn');
+    if (a) a.classList.add('show');
+};
             const closeFortune = document.getElementById('close-fortune');
             if (closeFortune) {
                 closeFortune.addEventListener('click', () => {

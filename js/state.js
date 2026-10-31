@@ -40,6 +40,7 @@
         let customIntros = [];
         let customPeriodCare = [];  // 经期关心话术——氛围感配置里的新分类，不分组
         let customCatchNight = [];  // 抓熬夜通知模板——氛围感配置里的新分类（从 localStorage 载入）
+        let customPinyinPhrases = [];  // 拼音模式短句池——回复库管理里的可自定义分类（从 localStorage 载入）
         let currentMajorTab = 'reply'; 
         let currentSubTab = 'custom';  
         let currentReplyTab = 'custom';

@@ -469,6 +469,7 @@
     f.id = 'milk-music-float';
     f.innerHTML =
       '<div class="mf-drag" id="mf-drag">' +
+        '<button class="mf-icon-btn" id="mf-invite" title="邀请一起听"><i class="fas fa-headphones"></i></button>' +
         '<span class="mf-title">正在播放</span>' +
         '<button class="mf-icon-btn" id="mf-hide" title="隐藏(仅播放)"><i class="fas fa-eye-slash"></i></button>' +
         '<button class="mf-icon-btn" id="mf-min" title="最小化"><i class="fas fa-minus"></i></button>' +
@@ -520,6 +521,11 @@
     $('mf-next').onclick = function () { next(false); };
     $('mf-prev').onclick = prev;
     $('mf-mode').onclick = cycleMode;
+    $('mf-invite').onclick = function () {
+      if (_supClick) return;
+      if (window.listenFeature && typeof window.listenFeature.startInvite === 'function') window.listenFeature.startInvite();
+      else toast('一起听功能未就绪', 'info');
+    };
     $('mf-cover').onclick = function () { if (!_supClick) openPage(); };
     $('mf-list').onclick = function () { if (!_supClick) openFloatList(); };
     $('mf-min').onclick = function (e) { if (!_supClick) setFloatMin(true, e); };
@@ -635,6 +641,14 @@
     setFloatMin(false);
   }
   function stopAndHideFloat() {
+    // 若正在"一起听"，关闭音乐 = 结束一起听，并发"已结束+时长"通知（隐藏不算）
+    if (togetherStart) {
+      var dur = Date.now() - togetherStart;
+      var mm = Math.floor(dur / 60000), ss = Math.floor((dur % 60000) / 1000);
+      var durTxt = (mm > 0 ? mm + '分' : '') + ss + '秒';
+      try { if (typeof window._addCallEvent === 'function') window._addCallEvent('fa-headphones', '一起听歌已结束 · 时长 ' + durTxt, null); } catch (e) {}
+      try { if (window.MilkMusic && window.MilkMusic.stopTogether) window.MilkMusic.stopTogether(); } catch (e) {}
+    }
     if (audio) audio.pause();
     hideFloat();
     if (page) page.classList.remove('mp-open');
@@ -1283,7 +1297,13 @@
       current: function () { return findTrack(currentId); },
       list: function () { return library.slice(); },
       isPlaying: function () { return isPlaying; },
-      partnerName: function () { return (typeof settings !== 'undefined' && settings.partnerName) || '对方'; },
+      partnerName: function () {
+        try {
+          var s = (typeof settings !== 'undefined' && settings.partnerName) ? settings.partnerName : '';
+          if (!s) { var el = document.getElementById('partner-name'); if (el && el.textContent && el.textContent.trim()) s = el.textContent.trim(); }
+          return s || '对方';
+        } catch (e) { return '对方'; }
+      },
       // 一起听记录（记录开始，结束时调用 stopTogether 写入）
       startTogether: function (name) { togetherStart = Date.now(); togetherName = name || '一起听'; },
       stopTogether: function () {

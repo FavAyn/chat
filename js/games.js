@@ -2394,11 +2394,32 @@ function initComboMenu() {
         var mTop = topWords(mFreq, 60);
         var aTop = topWords(aFreq, 60);
 
+        // 近两周（14 天）：统计"他频繁使用的字卡"（不再用分词，避免出现碎片）
+        var _cutoff = Date.now() - 14 * 24 * 60 * 60 * 1000;
+        var _ts = function (m) { var t = new Date(m.timestamp).getTime(); return isNaN(t) ? 0 : t; };
+        var recentP = partnerMsgs.filter(function(m) { return _ts(m) >= _cutoff; });
+        var recentM = myMsgs.filter(function(m)      { return _ts(m) >= _cutoff; });
+        var _cards = (typeof customReplies !== 'undefined' && customReplies) ? customReplies : (window.customReplies || []);
+        var _cardFreq = {};
+        recentP.forEach(function (m) {
+            var txt = m.text || '';
+            var used = {};
+            _cards.forEach(function (c) {
+                if (!c) return;
+                var card = String(c).trim();
+                if (card.length < 2) return;
+                if (txt.indexOf(card) >= 0 && !used[card]) { _cardFreq[card] = (_cardFreq[card] || 0) + 1; used[card] = true; }
+            });
+        });
+        var rTop = Object.keys(_cardFreq).map(function (w) { return { word: w, count: _cardFreq[w] }; })
+            .sort(function (a, b) { return b.count - a.count; }).slice(0, 60);
+
         var cur = container._currentView || 'all';
 
         function data(v) {
             if (v === 'partner') return { words: pTop, total: partnerMsgs.length };
             if (v === 'me')      return { words: mTop, total: myMsgs.length };
+            if (v === 'recent')  return { words: rTop, total: recentP.length + recentM.length };
             return { words: aTop, total: partnerMsgs.length + myMsgs.length };
         }
 
@@ -2458,6 +2479,7 @@ function initComboMenu() {
                 +     '<button class="wc-view-btn'+(cur==='all'?' active':'')+'" data-view="all">全部</button>'
                 +     '<button class="wc-view-btn'+(cur==='partner'?' active':'')+'" data-view="partner">'+pName+'</button>'
                 +     '<button class="wc-view-btn'+(cur==='me'?' active':'')+'" data-view="me">'+mName+'</button>'
+                +     '<button class="wc-view-btn'+(cur==='recent'?' active':'')+'" data-view="recent">近两周</button>'
                 +   '</div></div>'
                 +   '<button class="wc-regen-btn" title="换一种布局"><i class="fas fa-redo"></i></button>'
                 + '</div>'

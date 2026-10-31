@@ -290,6 +290,8 @@ function saveMoodData() {
         renderMoodCalendar();
     }
 }
+window.saveMoodData = saveMoodData;
+window.renderMoodCalendar = renderMoodCalendar;
 
 // 供导入逻辑调用：按日期 key 合并心情手账（不覆盖已有日期的数据）
 window._setMoodData = function(importedMoodData, importedCustomMoodOptions) {
@@ -317,6 +319,7 @@ function saveMoodTrash() {
 function getAllMoodOptions() {
     return [...MOOD_OPTIONS, ...customMoodOptions];
 }
+window.getAllMoodOptions = getAllMoodOptions;
 function formatDateStr(date) {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -1169,11 +1172,14 @@ function initMoodListeners() {
         newBtn.addEventListener('click', () => {
             if (typeof window.updateDynamicNames === 'function') window.updateDynamicNames();
             const advModal = document.getElementById('advanced-modal');
-            if (advModal) hideModal(advModal); 
+            if (advModal) hideModal(advModal);
             setTimeout(() => {
-                renderMoodCalendar();
-                showModal(modal);
-            }, 150); 
+                if (typeof window.openMomentsWithTransition === 'function') window.openMomentsWithTransition();
+                setTimeout(() => {
+                    if (typeof window.csSwitchTab === 'function') window.csSwitchTab('mood');
+                    if (typeof window._moodInit === 'function') window._moodInit();
+                }, 350);
+            }, 150);
         });
     }
 

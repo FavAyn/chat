@@ -1745,6 +1745,9 @@
         $('companion-exit-confirm').classList.remove('active');
         window._companionCurrentMode = null; // 退出陪伴，清除模式标记
 
+        // 退出陪伴：自动关闭"熬夜模式"（恢复默认熬夜检测开启，静默不发消息）
+        try { if (window.catchNight && window.catchNight.setEnabled) window.catchNight.setEnabled(true); } catch (e) {}
+
         // 退出陪伴页：仅当音乐"正在播放"时才恢复悬浮窗；没播（含暂停/停止）就不弹
         try { if (window.MilkMusic && typeof window.MilkMusic.showFloat === 'function') window.MilkMusic.showFloat(); } catch (e) {}
 
@@ -1995,9 +1998,6 @@
                 <div class="companion-noise-milk row" id="companion-noise-milk">
                     <div class="companion-noise-option" data-milk="open">
                         <i class="fas fa-music"></i><span>我的音乐库</span>
-                    </div>
-                    <div class="companion-noise-option" data-milk="invite">
-                        <i class="fas fa-headphones"></i><span>邀请 TA 一起听</span>
                     </div>
                 </div>
                 ${currentSongName ? `

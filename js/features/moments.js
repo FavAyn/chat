@@ -632,6 +632,8 @@ window.csSwitchTab=function(tab){
     if(tab==='ann'&&typeof window._annInit==='function')window._annInit();
     if(tab==='cinema'&&typeof window._cinemaInit==='function')window._cinemaInit();
     if(tab==='garden'&&typeof window._gardenInit==='function')window._gardenInit();
+    // 花园 tab：打开言序花园（mochi）全屏页
+    if(tab==='garden'&&typeof window._mochiGardenOpen==='function')window._mochiGardenOpen();
 
     // 切离 feed 后兜底清除 feed title（IntersectionObserver 可能异步残留）
     if(tab!=='feed'){
