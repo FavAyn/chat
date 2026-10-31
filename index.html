@@ -1409,6 +1409,10 @@ html[data-theme="dark"] #cs-transition-overlay{background:radial-gradient(circle
     </div>
     <i class="fas fa-chevron-right" style="color: var(--accent-color); opacity: 0.7;"></i>
 </div>
+<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--primary-bg);border-radius:12px;margin-bottom:12px;">
+  <span style="font-size:14px;color:var(--text-primary);"><i class="fas fa-moon"></i> 夜间模式</span>
+  <button id="theme-mode-toggle" style="font-family:inherit;font-size:13px;padding:8px 16px;border-radius:10px;border:1px solid var(--border-color);background:var(--secondary-bg);color:var(--text-primary);cursor:pointer;">☀️ 白天</button>
+</div>
 <div id="appearance-nav-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:4px 0 12px;">
     <div class="settings-card" onclick="showAppearancePanel('theme')" style="cursor:pointer;">
         <i class="fas fa-paint-roller"></i><span>主题配色</span>
@@ -3579,7 +3583,7 @@ html[data-theme="dark"] #cs-transition-overlay{background:radial-gradient(circle
     <div class="page" id="page-garden" hidden>
       <div class="chat-head">
         <span class="ch-back" id="garden-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></span>
-        <span class="ch-name">花园</span>
+        <span class="ch-name">花园</span><button id="garden-data-btn" class="cs-icon-btn" style="margin-left:auto;" title="数据"><i class="fas fa-database"></i></button>
       </div>
       <div class="garden-scroll">
         <div class="garden-weather-bar" id="garden-weather-bar">
@@ -3592,12 +3596,12 @@ html[data-theme="dark"] #cs-transition-overlay{background:radial-gradient(circle
         <div class="garden-stats" id="garden-stats"></div>
         <div class="garden-visitor" id="garden-visitor"></div>
         <div class="garden-toolbar" id="garden-toolbar">
-          <button class="garden-tool" data-tool="water" title="浇水">💧<span class="garden-tool-label">浇水</span></button>
-          <button class="garden-tool" data-tool="plant" title="种植">🌱<span class="garden-tool-label">种植</span></button>
-          <button class="garden-tool" data-tool="fertilize" title="施肥">🧪<span class="garden-tool-label">施肥</span></button>
-          <button class="garden-tool" data-tool="harvest" title="收获">🧺<span class="garden-tool-label">收获</span></button>
-          <button class="garden-tool batch" data-tool="waterall" title="一键浇">💦<span class="garden-tool-label">全浇</span></button>
-          <button class="garden-tool batch" data-tool="harvestall" title="一键收">📦<span class="garden-tool-label">全收</span></button>
+          <button class="garden-tool" data-tool="water" title="浇水"><span class="garden-tool-emoji">💧</span><span class="garden-tool-label">浇水</span></button>
+          <button class="garden-tool" data-tool="plant" title="种植"><span class="garden-tool-emoji">🌱</span><span class="garden-tool-label">种植</span></button>
+          <button class="garden-tool" data-tool="fertilize" title="施肥"><span class="garden-tool-emoji">🧪</span><span class="garden-tool-label">施肥</span></button>
+          <button class="garden-tool" data-tool="harvest" title="收获"><span class="garden-tool-emoji">🧺</span><span class="garden-tool-label">收获</span></button>
+          <button class="garden-tool batch" data-tool="waterall" title="一键浇"><span class="garden-tool-emoji">💦</span><span class="garden-tool-label">全浇</span></button>
+          <button class="garden-tool batch" data-tool="harvestall" title="一键收"><span class="garden-tool-emoji">📦</span><span class="garden-tool-label">全收</span></button>
         </div>
         <div class="garden-log glass" id="garden-log">
           <div class="garden-log-title">花园日志</div>
@@ -3606,7 +3610,7 @@ html[data-theme="dark"] #cs-transition-overlay{background:radial-gradient(circle
         <div class="garden-dex glass" id="garden-dex"></div>
         <div class="garden-inv glass" id="garden-inv"></div>
         <div class="garden-lb glass" id="garden-lb"></div>
-        <div class="garden-data-manage glass" id="garden-data-manage" style="padding:14px;">
+        <div class="garden-data-manage glass" id="garden-data-manage" style="display:none;padding:14px;">
           <div class="garden-log-title" style="margin-bottom:10px;">花园数据管理</div>
           <div style="display:flex;gap:10px;">
             <button data-garden-act="export" class="garden-tool" style="flex:1;">导出数据</button>
@@ -3853,6 +3857,7 @@ html[data-theme="dark"] #cs-transition-overlay{background:radial-gradient(circle
     <!-- == 功能模块 == -->
     <script src="js/features/mood.js"></script>
     <script src="js/features/diary.js"></script>
+    <script src="js/features/theme-mode.js"></script>
     <script src="js/features/envelope.js"></script>
     <script src="js/features/moments.js"></script>
     <script src="js/features/album.js"></script>

@@ -158,8 +158,24 @@ var VISITORS = [
   { type: "butterfly", e: "\uD83E\uDE9B", n: "\u8774\u8776" },
   { type: "bee", e: "\uD83D\uDC1D", n: "\u871C\u8702" },
   { type: "bird", e: "\uD83D\uDC26", n: "\u5C0F\u9E1F" },
-  { type: "ladybug", e: "\uD83D\uDC1E", n: "\u74E2\u866B" }
+  { type: "hamster", e: "\uD83D\uDC39", n: "\u4ED3\u9F20" },
+  { type: "cat", e: "\uD83D\uDC08\u200D\u2B1B", n: "\u9ED1\u732B" },
+  { type: "squirrel", e: "\uD83D\uDC3F\uFE0F", n: "\u677E\u9F20" },
+  { type: "hedgehog", e: "\uD83E\uDD94", n: "\u523A\u731B" },
+  { type: "rabbit", e: "\uD83D\uDC30", n: "\u5154\u5B50" },
+  { type: "firefly", e: "\u2728", n: "\u8424\u706B\u866B" }
 ];
+var VISITOR_ACTS = {
+  butterfly: ["停在花上歇了一会儿", "绕着花园飞了几圈", "停在叶尖上晒了晒太阳", "和另一只蝴蝶一起跳了支舞"],
+  bee: ["采了一点花蜜", "绕着花丛嗡嗡转了一圈", "在花心滚了一身花粉", "给刚开的花传了粉"],
+  bird: ["衔来一颗种子放在地里", "在篱笆上唱了一首歌", "啄走了叶子上的小虫子", "衔来一根小树枝搭窝"],
+  hamster: ["在土里打了个洞钻来钻去", "抱着瓜子啃得咔嚓响", "把脸颊塞得鼓鼓的", "在花盆边磨了磨牙"],
+  cat: ["来串门，留下了一朵小花", "在你脚边打了个滚", "蹭了蹭刚冒芽的小苗", "蹲在花丛里看了半天蝴蝶", "在花园里睡了个午觉"],
+  squirrel: ["埋了一颗坚果", "在树下啃了半天松果", "从篱笆上一路小跑过来", "把尾巴当伞遮了遮太阳"],
+  hedgehog: ["在花丛里窸窸窣窣地翻了个身", "背着几片落叶慢慢走过", "在墙角缩成一个小刺球", "偷吃了一颗掉在地上的果子"],
+  rabbit: ["在草丛里蹦来蹦去", "蹲在花边嗅了嗅香味", "把耳朵贴在土上听了听", "叼来几根青草铺了个小窝"],
+  firefly: ["夜里飞来转了一圈", "停在了最亮的那朵花上", "把花丛照得一闪一闪的", "绕着篱笆跳了支光的舞"]
+};
 
 function wx() { var d = new Date(); return W[(d.getDate() + d.getMonth() + d.getHours()) % 4]; }
 function sea() { return S[Math.floor(new Date().getMonth() / 3) % 4]; }
@@ -566,7 +582,7 @@ function ensureHybridBtn() {
   btn.id = "garden-tool-hybrid";
   btn.className = "garden-tool hybrid";
   btn.dataset.tool = "hybrid";
-  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21h10l-1.5-5h-7z"/><path d="M12 16v-4"/><circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/></svg><span class="garden-tool-label">\u6742\u4EA4</span>';
+  btn.innerHTML = '<span class="garden-tool-emoji">🌿</span><span class="garden-tool-label">\u6742\u4EA4</span>';
   tb.appendChild(btn);
 }
 function ensureUpgradeBtn() {
@@ -577,7 +593,7 @@ function ensureUpgradeBtn() {
   btn.id = "garden-tool-upgrade";
   btn.className = "garden-tool upgrade";
   btn.dataset.tool = "upgrade";
-  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.5 7h7.5l-6 4.5 2.5 7.5-6.5-4.5-6.5 4.5 2.5-7.5-6-4.5h7.5z"/></svg><span class="garden-tool-label">\u5347\u7EA7</span>';
+  btn.innerHTML = '<span class="garden-tool-emoji">⬆️</span><span class="garden-tool-label">\u5347\u7EA7</span>';
   tb.appendChild(btn);
 }
 function ensureReclaimBtn() {
@@ -588,14 +604,14 @@ function ensureReclaimBtn() {
   btn.id = "garden-tool-reclaim";
   btn.className = "garden-tool reclaim";
   btn.dataset.tool = "reclaim";
-  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l5.5-5.5"/><path d="M9.5 14.5L17 7l2.5 2.5-7.5 7.5z"/><path d="M15 4.5L19.5 9"/></svg><span class="garden-tool-label">\u5F00\u58A6</span>';
+  btn.innerHTML = '<span class="garden-tool-emoji">🪓</span><span class="garden-tool-label">\u5F00\u57A6</span>';
   tb.appendChild(btn);
   // #503 收地：开多了的地块可以手动缩回（只收尾部空地，有花的地绝不裁）
   var sb = document.createElement("button");
   sb.id = "garden-tool-shrink";
   sb.className = "garden-tool shrink";
   sb.dataset.tool = "shrink";
-  sb.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v6h6"/><path d="M20 10V4h-6"/><path d="M14 10l6-6"/><path d="M4 14l6 6"/></svg><span class="garden-tool-label">收地</span>';
+  sb.innerHTML = '<span class="garden-tool-emoji">📦</span><span class="garden-tool-label">收地</span>';
   tb.appendChild(sb);
 }
 // #503 缩地：把尾部连续的空地块收回（plotN 减小），下限 4 块；只动空地、有花不裁、随时可再开垦
@@ -651,7 +667,7 @@ function ensureReplantBtn() {
   btn.id = "garden-tool-replant";
   btn.className = "garden-tool replant batch";
   btn.dataset.tool = "replant";
-  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-8"/><path d="M12 13c-3 0-5-2-5-5 3 0 5 2 5 5z"/><path d="M12 13c3 0 5-2 5-5-3 0-5 2-5 5z"/><path d="M5 21h14"/></svg><span class="garden-tool-label">\u8865\u79CD</span>';
+  btn.innerHTML = '<span class="garden-tool-emoji">📦</span><span class="garden-tool-label">\u8865\u79CD</span>';
   tb.appendChild(btn);
 }
 // #446 扩建改自愿：确认后才把 plotN 提到当前等级资格，已有的地只增不减
@@ -659,18 +675,18 @@ function reclaimPlots() {
   var ent = plotEntitled();
   var cur = data.plotN || PLOTS;
   if (cur >= ent) {
-    if (window.openModal) window.openModal("\u5F00\u58A6\u65B0\u5730\u5757", "", function () {}, { pills: [{ label: "\u597D\u7684", value: "ok" }], noInput: true, staticText: "\u5F53\u524D " + cur + " \u5757\u5730\u5DF2\u5168\u90E8\u5F00\u58A6\n\u4E0B\u6B21\u5347\u7EA7\u53EF\u518D\u89E3\u9501\u65B0\u5730\u5757\u7684\u5F00\u58A6\u8D44\u683C\uFF08Lv.3/5/8 \u5404 +2\uFF0CLv.12 +4\uFF09" });
+    if (window.openModal) window.openModal("\u5F00\u57A6\u65B0\u5730\u5757", "", function () {}, { pills: [{ label: "\u597D\u7684", value: "ok" }], noInput: true, staticText: "\u5F53\u524D " + cur + " \u5757\u5730\u5DF2\u5168\u90E8\u5F00\u57A6\n\u4E0B\u6B21\u5347\u7EA7\u53EF\u518D\u89E3\u9501\u65B0\u5730\u5757\u7684\u5F00\u57A6\u8D44\u683C\uFF08Lv.3/5/8 \u5404 +2\uFF0CLv.12 +4\uFF09" });
     return;
   }
   if (!window.openModal) { data.plotN = ent; data.pnUser = 1; syncPlots(); save(data); renderAll(); return; }
-  window.openModal("\u5F00\u58A6\u65B0\u5730\u5757", "", function (v) {
+  window.openModal("\u5F00\u57A6\u65B0\u5730\u5757", "", function (v) {
     if (v !== "1") return;
     data.plotN = ent;
     data.pnUser = 1; // FIX 2026-09-16 #601e：用户手动开垦过 → load() 的存量缩地不再生效
     syncPlots();
-    addLog("\u2605", "\u5F00\u58A6\u4E86 " + (ent - cur) + " \u4E2A\u65B0\u5730\u5757\uFF0C\u82B1\u56ED\u73B0\u6709 " + data.p.length + " \u5757\u5730");
+    addLog("\u2605", "\u5F00\u57A6\u4E86 " + (ent - cur) + " \u4E2A\u65B0\u5730\u5757\uFF0C\u82B1\u56ED\u73B0\u6709 " + data.p.length + " \u5757\u5730");
     save(data); renderAll();
-  }, { pills: [{ label: "\u5F00\u58A6 " + (ent - cur) + " \u5757", value: "1" }, { label: "\u518D\u60F3\u60F3", value: "0" }], noInput: true, staticText: "\u628A\u5730\u5757\u4ECE " + cur + " \u5757\u6269\u5230 " + ent + " \u5757\uFF1F\n\u5730\u5757\u8D8A\u591A\u6D47\u6C34\u6536\u83B7\u8D8A\u5FD9\uFF0C\u4E5F\u53EF\u4EE5\u4FDD\u6301\u5C0F\u82B1\u56ED\u7CBE\u517B\u54E6\n\uFF08\u4EE5\u540E\u968F\u65F6\u53EF\u4EE5\u518D\u5F00\u58A6\uFF0C\u5730\u5757\u4E0D\u4F1A\u81EA\u52A8\u589E\u52A0\uFF09" });
+  }, { pills: [{ label: "\u5F00\u57A6 " + (ent - cur) + " \u5757", value: "1" }, { label: "\u518D\u60F3\u60F3", value: "0" }], noInput: true, staticText: "\u628A\u5730\u5757\u4ECE " + cur + " \u5757\u6269\u5230 " + ent + " \u5757\uFF1F\n\u5730\u5757\u8D8A\u591A\u6D47\u6C34\u6536\u83B7\u8D8A\u5FD9\uFF0C\u4E5F\u53EF\u4EE5\u4FDD\u6301\u5C0F\u82B1\u56ED\u7CBE\u517B\u54E6\n\uFF08\u4EE5\u540E\u968F\u65F6\u53EF\u4EE5\u518D\u5F00\u57A6\uFF0C\u5730\u5757\u4E0D\u4F1A\u81EA\u52A8\u589E\u52A0\uFF09" });
 }
 // #446 一键补种：空地块按上次种过的品种补齐（稀有花不消耗 rareInv 库存，回落普通花）
 function replantAll() {
@@ -1694,7 +1710,7 @@ function spawnVisitor() {
   var vi = VISITORS[Math.floor(Math.random() * VISITORS.length)];
   var dur = 3600 + Math.floor(Math.random() * 10800);
   data.visitor = { type: vi.type, start: Math.floor(Date.now() / 1000), dur: dur };
-  addLog(vi.n, "\uD83C\uDF49 \u6765\u8BBF\u4E86\u82B1\u56ED");
+  var _acts = VISITOR_ACTS[vi.type] || ["\u6765\u8BBF\u95EE\u4E86\u82B1\u56ED"]; addLog(vi.n, _acts[Math.floor(Math.random() * _acts.length)]);
   save(data);
 }
 

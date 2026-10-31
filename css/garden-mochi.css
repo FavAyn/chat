@@ -482,3 +482,30 @@
 #page-garden .ch-back svg { width: 20px; height: 20px; stroke: currentColor; fill: none; }
 #page-garden .ch-name { font-size: 17px; font-weight: 700; color: var(--text-primary); }
 #page-garden .glass { background: var(--secondary-bg); border: 1px solid var(--border-color); border-radius: 14px; }
+
+/* ===== milk 统一覆盖：变量/颜色/背景/圆角 ===== */
+#page-garden{
+  --ink: var(--text-primary);
+  --muted: var(--text-secondary);
+}
+#page-garden .garden-plot{ background:var(--primary-bg); border-color:var(--border-color); border-radius:14px; }
+#page-garden .garden-plot.empty{ background:rgba(var(--accent-color-rgb),.04); border-color:var(--border-color); }
+#page-garden .garden-plot.watered{ border-color:rgba(var(--accent-color-rgb),.35); }
+#page-garden .garden-plot.wilted{ background:rgba(180,140,90,.12); border-color:rgba(180,140,90,.35); }
+#page-garden .garden-tool{ background:var(--primary-bg); border:1px solid var(--border-color); color:var(--text-primary); border-radius:12px; }
+#page-garden .garden-tool.batch{ background:rgba(var(--accent-color-rgb),.1); border-color:rgba(var(--accent-color-rgb),.3); }
+#page-garden .garden-tool:active{ background:var(--accent-color); color:#fff; }
+#page-garden .garden-tool:active svg{ stroke:#fff; }
+#page-garden .garden-log,#page-garden .garden-dex,#page-garden .garden-inv,#page-garden .garden-lb,#page-garden .garden-data-manage,#page-garden .garden-stats,#page-garden .garden-visitor,#page-garden .garden-level-bar{
+  background:var(--primary-bg); border:1px solid var(--border-color); border-radius:14px;
+}
+#page-garden .garden-weather-bar{ color:var(--text-secondary); }
+#page-garden .garden-log-title,#page-garden .garden-dex-title,#page-garden .garden-inv-title{ color:var(--text-primary); }
+
+/* 工具栏 emoji 图标统一 */
+.garden-tool-emoji{font-size:20px;line-height:1;display:block;}
+
+/* 全浇/全收/补种 背景统一（去掉绿色批量底） */
+#page-garden .garden-tool.batch{ background:var(--primary-bg) !important; border-color:var(--border-color) !important; }
+#page-garden .garden-tool.batch:active{ background:var(--accent-color) !important; color:#fff !important; }
+#page-garden .garden-tool.batch:active .garden-tool-emoji{ filter:none; }

@@ -193,3 +193,13 @@ html[data-theme="dark"] .gk-overlay { background: rgba(30,30,30,.92); }
   #diary-jump-wrap{flex-wrap:wrap;}
   #diary-jump{min-width:0;}
 }
+
+/* ===== 合成 ===== */
+#chat-merge-panel .merge-stage{display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+#merge-canvas{display:block;background:#faf8f4;border-radius:10px;touch-action:none;max-width:100%;}
+#chat-merge-panel.merge-fs{align-items:stretch;justify-content:stretch;padding:0;}
+#chat-merge-panel.merge-fs .gk-card{width:100%;max-width:100%;height:100vh;max-height:100vh;border-radius:0;}
+
+/* 顶部按钮顺序：情侣空间在陪伴前 */
+#moments-header-btn{ order: 1 !important; }
+#companion-btn{ order: 2 !important; }

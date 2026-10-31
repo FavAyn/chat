@@ -1379,7 +1379,7 @@ else setupTaRandomControls();
                 }
             }
 
-            DOMElements.html.setAttribute('data-theme', window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            (function(){var _tm=null;try{_tm=localStorage.getItem('milk-theme-mode');}catch(e){}DOMElements.html.setAttribute('data-theme',(_tm==='light'||_tm==='dark')?_tm:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));})();
             DOMElements.partner.name.textContent = settings.partnerName;
             DOMElements.me.name.textContent = settings.myName;
             DOMElements.partner.status.textContent = settings.partnerStatus || '在线';
@@ -3233,7 +3233,7 @@ window.initializeSession = async function() {
 
 // 监听系统昼夜变化，实时更新 data-theme
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-    document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+    try{if(localStorage.getItem('milk-theme-mode'))return;}catch(x){}document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
 });
 
 // 注：往上/往下翻页加载更多消息的触发，只靠 listeners.js 里那个绑定在真正可滚动容器（chat-container）
