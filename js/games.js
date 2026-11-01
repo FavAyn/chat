@@ -4,13 +4,13 @@ function renderStatsContent() {
             const partnerMessages = messages.filter(msg =>
                 msg.sender !== 'user' && msg.sender !== null &&
                 msg.text &&
-                msg.type !== 'system'
+                msg.type !== 'system' && msg.type !== 'call-event' && !msg.special && !/一起听|听歌|《|邀请你|邀请对方|熬夜|检测|送了你|一支|花束|礼物|收到|系统|通知|自动/.test(msg.text)
             );
             
             const myMessages = messages.filter(msg =>
                 msg.sender === 'user' &&
                 msg.text &&
-                msg.type !== 'system'
+                msg.type !== 'system' && msg.type !== 'call-event' && !msg.special && !/一起听|听歌|《|邀请你|邀请对方|熬夜|检测|送了你|一支|花束|礼物|收到|系统|通知|自动/.test(msg.text)
             );
 
             if (partnerMessages.length === 0 && myMessages.length === 0) {
@@ -39,6 +39,27 @@ function renderStatsContent() {
 
             const partnerTop = getTopReplies(partnerMessages);
             const myTop = getTopReplies(myMessages);
+
+// 近两周表情包统计
+const _cut14 = Date.now() - 14 * 24 * 60 * 60 * 1000;
+const _stkSet = {};
+try { (typeof stickerLibrary !== 'undefined' ? stickerLibrary : []).forEach(function (s) { if (s) _stkSet[s] = 1; }); } catch (e) {}
+try { (typeof myStickerLibrary !== 'undefined' ? myStickerLibrary : []).forEach(function (s) { var u = (typeof s === 'string' ? s : (s && s.src)); if (u) _stkSet[u] = 1; }); } catch (e) {}
+const _pStk = {}, _mStk = {};
+messages.forEach(function (m) {
+  if (!m || !m.image || !_stkSet[m.image]) return;
+  var t = 0; try { t = new Date(m.timestamp).getTime() || 0; } catch (e) {}
+  if (t < _cut14) return;
+  var h = (m.sender === 'user') ? _mStk : _pStk;
+  h[m.image] = (h[m.image] || 0) + 1;
+});
+function _topStk(h) { return Object.keys(h).map(function (k) { return { src: k, n: h[k] }; }).sort(function (a, b) { return b.n - a.n; }).slice(0, 5); }
+function _stkRow(list) {
+  if (!list.length) return '<div class="stats-empty-mini">近两周没有使用</div>';
+  return '<div class="stk-rank">' + list.map(function (it, i) {
+    return '<div class="stk-rank-item"><span class="stk-rank-no">#' + (i + 1) + '</span><img src="' + it.src + '"><span class="stk-rank-n">' + it.n + '次</span></div>';
+  }).join('') + '</div>';
+}
 
             const generateRankHTML = (list) => {
                 if (list.length === 0) return '<div style="text-align:center;color:var(--text-secondary);font-size:12px;padding:10px;">暂无数据</div>';
@@ -112,17 +133,21 @@ function renderStatsContent() {
                             </button>
                         </div>
                         <div class="stats-card-title" id="stats-rank-title">
-                            <i class="fas fa-user-circle"></i> 对方高频词 TOP 5
+                            <i class="fas fa-user-circle"></i> 对方高频句 TOP 5
                         </div>
                         <div class="stats-rank-list" id="stats-rank-list">
                             ${generateRankHTML(partnerTop)}
                         </div>
+        <div class="stats-card-title" style="margin-top:14px;"><i class="fas fa-face-smile"></i> 近两周表情包 TOP 5</div>
+        <div id="stats-stk-list">${_stkRow(_topStk(_pStk))}</div>
                     </div>
                 </div>
             `;
 
             statsContent._partnerHTML = generateRankHTML(partnerTop);
             statsContent._myHTML = generateRankHTML(myTop);
+    statsContent._partnerStkHTML = _stkRow(_topStk(_pStk));
+    statsContent._myStkHTML = _stkRow(_topStk(_mStk));
         }
 
         window.switchStatsView = function(who) {
@@ -132,16 +157,17 @@ function renderStatsContent() {
             const title = document.getElementById('stats-rank-title');
             const list = document.getElementById('stats-rank-list');
             if (!partnerBtn || !meBtn || !list) return;
+    setTimeout(function () { var sl = document.getElementById('stats-stk-list'); if (sl) sl.innerHTML = (who === 'partner' ? statsContent._partnerStkHTML : statsContent._myStkHTML) || ''; }, 0);
 
             if (who === 'partner') {
                 partnerBtn.classList.add('active');
                 meBtn.classList.remove('active');
-                title.innerHTML = '<i class="fas fa-user-circle"></i> 对方高频词 TOP 5';
+                title.innerHTML = '<i class="fas fa-user-circle"></i> 对方高频句 TOP 5';
                 list.innerHTML = statsContent._partnerHTML || '<div style="text-align:center;color:var(--text-secondary);font-size:12px;padding:10px;">暂无数据</div>';
             } else {
                 meBtn.classList.add('active');
                 partnerBtn.classList.remove('active');
-                title.innerHTML = '<i class="fas fa-user"></i> 我方高频词 TOP 5';
+                title.innerHTML = '<i class="fas fa-user"></i> 我方高频句 TOP 5';
                 list.innerHTML = statsContent._myHTML || '<div style="text-align:center;color:var(--text-secondary);font-size:12px;padding:10px;">暂无数据</div>';
             }
         };
@@ -2382,8 +2408,10 @@ function initComboMenu() {
         var pName = (typeof settings !== 'undefined' && settings.partnerName) ? settings.partnerName : '对方';
         var mName = (typeof settings !== 'undefined' && settings.myName)      ? settings.myName      : '我';
 
-        var partnerMsgs = messages.filter(function(m) { return m.sender !== 'user' && m.text && m.type !== 'system' && m.type !== 'call-event'; });
-        var myMsgs      = messages.filter(function(m) { return m.sender === 'user' && m.text && m.type !== 'system' && m.type !== 'call-event'; });
+        var _isNotice = function(m){ var t=m.text||''; return /【自动通知】|自动通知|监测到|检测到|检测|熬夜|今晚不|来抓|抓我|别来|送了你|一支|花束|礼物|收到/.test(t); };
+var _isSys = function(m){ return !m.sender || m.sender === 'system' || !!m.special || m.type === 'system' || m.type === 'call-event'; };
+var partnerMsgs = messages.filter(function(m) { return m.sender !== 'user' && m.text && !_isSys(m) && !_isNotice(m); });
+        var myMsgs      = messages.filter(function(m) { return m.sender === 'user' && m.text && !_isSys(m) && !_isNotice(m); });
 
         var pFreq = {}, mFreq = {};
         partnerMsgs.forEach(function(m) { pFreq = mergeFreq(pFreq, tokenize(m.text)); });
@@ -2488,7 +2516,7 @@ function initComboMenu() {
                 +   '<canvas id="wc-canvas" width="'+(cw*dpr)+'" height="'+(ch*dpr)+'" style="width:'+cw+'px;height:'+ch+'px;display:block;"></canvas>'
                 + '</div>'
                 + '<div class="wc-rank-section">'
-                +   '<div class="wc-rank-title"><i class="fas fa-bars"></i> 高频词 Top 10</div>'
+                +   '<div class="wc-rank-title"><i class="fas fa-bars"></i> 高频句 Top 10</div>'
                 +   '<div class="wc-rank-list"></div>'
                 + '</div>';
 

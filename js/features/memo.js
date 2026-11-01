@@ -219,7 +219,7 @@
   }
 
   function open() { ensureHost(); items = loadItems(); render(); if (typeof showModal === 'function') showModal(hostEl); }
-  function close() { if (hostEl && typeof hideModal === 'function') hideModal(hostEl); }
+  function close() { if (hostEl && typeof hideModal === 'function') hideModal(hostEl); try { var _adv = document.getElementById('advanced-modal'); if (_adv && typeof showModal === 'function') showModal(_adv); } catch (e) {} }
   function saveKey() { return ITEM_KEY; }
 
   window.Memo = { open: open, close: close, saveKey: saveKey };

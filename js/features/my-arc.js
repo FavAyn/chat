@@ -429,7 +429,7 @@
     document.body.appendChild(mask);
     var inp = mask.querySelector('.myarc-inlay-input');
     setTimeout(function () { try { inp.focus(); } catch (e) {} }, 30);
-    function close() { if (mask.parentNode) mask.parentNode.removeChild(mask); pickCat = null; }
+    function close() { if (mask.parentNode) mask.parentNode.removeChild(mask); pickCat = null; try { var _adv = document.getElementById('advanced-modal'); if (_adv && typeof showModal === 'function') showModal(_adv); } catch (e) {} }
     mask.addEventListener('click', function (e) { if (e.target === mask) close(); });
     mask.querySelector('.myarc-inlay-cancel').addEventListener('click', close);
     mask.querySelector('.myarc-inlay-ok').addEventListener('click', function () {

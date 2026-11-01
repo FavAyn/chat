@@ -1588,13 +1588,28 @@ function handleTool(e) {
     upgradePlot(selPlot);
   } else if (tool === "replant") {
     replantAll();
-  } else if (tool === "reclaim") {
+  } else if (tool === "clear") {
+if (selPlot < 0) return;
+clearPlot(selPlot);
+} else if (tool === "reclaim") {
     reclaimPlots();
   } else if (tool === "shrink") {
     shrinkPlots();
   }
 }
 
+function clearPlot(idx) {
+  if (idx < 0 || idx >= data.p.length) return;
+  var plot = data.p[idx];
+  if (!plot) return;
+  var si = stageInfo(plot);
+  var name = si ? si.name : "\u690D\u7269";
+  var ok = window.confirm("\u786E\u5B9A\u94F2\u9664\u8FD9\u5757\u5730\u4E0A\u7684 " + name + " \u5417\uFF1F");
+  if (!ok) return;
+  data.p[idx] = null;
+  addLog("\u6211", "\u94F2\u9664\u4E86 " + name);
+  save(data); renderAll();
+}
 function waterAll() {
   var cnt = 0;
   for (var i = 0; i < data.p.length; i++) {

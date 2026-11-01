@@ -2167,8 +2167,9 @@ const addMessage = (message) => {
             DOMElements.messageInput.value = '';
             DOMElements.messageInput.style.height = '46px';
             if (imageFile && imageFile.size > MAX_IMAGE_SIZE) {
-                showNotification('图片大小不能超过5MB', 'error'); DOMElements.imageInput.value = ''; return;
-            }
+        if (typeof showNotification === 'function') showNotification('图片较大，正在压缩…', 'info', 1500);
+        // 不拦截，交给 optimizeImage 压缩后发送
+    }
 
             const createMessage = (imgSrc = null) => {
                 const messageData = {
@@ -2401,7 +2402,7 @@ if (!isBatchMode && type === 'normal') {
                     return String(phrases[Math.floor(Math.random() * phrases.length)]).trim();
                 }
                 var syl = ['ni','hao','wo','xiang','ni','zai','ma','jin','tian','xin','hao','bu','wen','ai','ni','de','ming','zi','kuai','le','shui','jiao','xiang','ni','le','wo','zhi','dao','bie','pa','you','wo','zai','shen','me','shi','hou','dou','hui','pei','zhe','ni','zhen','de','hen','xiang','ni','de','wei','dao','tai','xi','huan','ni','xiao','de','yang','zi','bie','zou','hao','ma','deng','ni','hui','lai','xiang','ni','le','kuai','shui','ba','wan','an','zao','dian','xiu','xi','hao','xiang','ni'];
-                var n = 3 + Math.floor(Math.random() * 6);
+                var n = 2 + Math.floor(Math.random() * 2);
                 var arr = [];
                 for (var i = 0; i < n; i++) arr.push(syl[Math.floor(Math.random() * syl.length)]);
                 return arr.join(' ');
@@ -2544,10 +2545,21 @@ if (partnerPersonas && partnerPersonas.length > 0 && Math.random() < 0.3) {
 
                     // 拼音模式：约 20% 概率把这条回复换成拼音串；
                     // 纠错模式开启时，"纠正"成有逻辑的中文（即保持正常字卡不替换）
-                    if (settings.pinyinMode && Math.random() < 0.2 && !settings.correctMode) {
-                        finalText = genPinyinStr();
-                        separateEmoji = null;
-                    }
+                    if (settings.pinyinMode && !settings.correctMode) {
+        var _nowP = Date.now();
+        var _durP = (typeof settings.pinyinDuration === 'number' ? settings.pinyinDuration : 10) * 60000;
+        if (window._pinyinUntil && window._pinyinUntil > _nowP) {
+            finalText = genPinyinStr();
+            separateEmoji = null;
+        } else {
+            var _probP = (typeof settings.pinyinProb === 'number' ? settings.pinyinProb : 20);
+            if (Math.random() * 100 < _probP) {
+                window._pinyinUntil = _nowP + _durP;
+                finalText = genPinyinStr();
+                separateEmoji = null;
+            }
+        }
+    }
 
                     addMessage({
                         id: Date.now() + i,
@@ -2672,7 +2684,7 @@ function showModal(modalElement, focusElement = null) {
             }, 300);
         }
 
-        async function viewImage(src) {
+        async function viewImage(src) { return; // 由 image-viewer.js 接管
             // 阶段三B：云端引用先下载；pending 引用从本地 base64 读
             let displaySrc = src;
             let downloadHref = src;

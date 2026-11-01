@@ -35,10 +35,10 @@
     var opts = moods().map(function (o) {
       return '<option value="' + esc(o.key) + '"' + (o.key === e.user ? ' selected' : '') + '>' + esc(o.kaomoji + ' ' + o.label) + '</option>';
     }).join('');
-    var ov = document.createElement('div'); ov.id = 'diary-editor'; ov.className = 'gi-overlay';
-    ov.innerHTML = '<div class="gi-card"><div class="gi-title">日记 · ' + esc(ds) + '</div>' +
-      '<select id="diary-mood-select" style="width:100%;margin-bottom:10px;padding:8px;border-radius:8px;border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);font-family:inherit;">' + opts + '</select>' +
-      '<textarea id="diary-note-input" rows="5" style="width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);font-family:inherit;font-size:13px;resize:vertical;"></textarea>' +
+    var ov = document.createElement('div'); ov.id = 'diary-editor'; ov.className = 'gi-overlay'; ov.style.padding = '0';
+    ov.innerHTML = '<div class="gi-card" style="max-width:100%;width:100%;height:100%;max-height:100%;border-radius:0;display:flex;flex-direction:column;"><div class="gi-title" style="font-size:16px;">日记 · ' + esc(ds) + '</div>' +
+      '<select id="diary-mood-select" style="width:100%;margin-bottom:12px;padding:12px 14px;border-radius:12px;border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);font-family:inherit;font-size:16px;">' + opts + '</select>' +
+      '<textarea id="diary-note-input" rows="8" style="width:100%;box-sizing:border-box;padding:14px;border-radius:12px;border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);font-family:inherit;font-size:15px;line-height:1.8;flex:1;min-height:0;resize:none;"></textarea>' +
       '<div class="gi-btns" style="margin-top:12px;"><button class="gi-no" id="diary-cancel">取消</button><button class="gi-ok" id="diary-save">保存</button></div></div>';
     document.body.appendChild(ov);
     document.getElementById('diary-note-input').value = e.note || '';

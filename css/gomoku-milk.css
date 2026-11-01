@@ -1,4 +1,4 @@
-﻿/* 浜斿瓙妫嬮潰鏉匡紙milk 椋庢牸锛岄厤鍚堣█搴?gomoku.js 浣跨敤锛?*/
+/* 浜斿瓙妫嬮潰鏉匡紙milk 椋庢牸锛岄厤鍚堣█搴?gomoku.js 浣跨敤锛?*/
 .gk-panel { position: fixed; inset: 0; z-index: 1550; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; padding: 16px; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
 .gk-panel[hidden] { display: none !important; }
 .gk-card { background: var(--secondary-bg); border: 1px solid var(--border-color); border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,.25); width: min(460px, 100%); max-height: 92vh; display: flex; flex-direction: column; overflow: hidden; }
@@ -203,3 +203,186 @@ html[data-theme="dark"] .gk-overlay { background: rgba(30,30,30,.92); }
 /* 顶部按钮顺序：情侣空间在陪伴前 */
 #moments-header-btn{ order: 1 !important; }
 #companion-btn{ order: 2 !important; }
+
+/* ④ 高级功能锁死横向滑动 */
+#advanced-modal .modal-content{ overflow-x:hidden !important; }
+#advanced-modal .settings-item-list{ overflow-x:hidden !important; }
+#advanced-modal .settings-item{ overflow:hidden; }
+
+/* ① 花园日志/图鉴等块背景与文字（暗色也清晰） */
+#page-garden .glass,
+#page-garden .garden-log,
+#page-garden .garden-dex,
+#page-garden .garden-inv,
+#page-garden .garden-lb,
+#page-garden .garden-data-manage,
+#page-garden .garden-stats,
+#page-garden .garden-visitor,
+#page-garden .garden-level-bar{
+  background: var(--secondary-bg) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+#page-garden .garden-log-toggle{ color: var(--accent-color) !important; }
+#page-garden .garden-log-item,
+#page-garden .garden-dex-item,
+#page-garden .garden-inv-item{ color: var(--text-secondary) !important; }
+
+/* 花园顶部tab/今日任务/成就 暗色统一 */
+#page-garden .garden-tabs{ background:var(--primary-bg) !important; }
+#page-garden .garden-tab{ background:var(--primary-bg) !important; color:var(--text-secondary) !important; border:1px solid var(--border-color) !important; }
+#page-garden .garden-tab.active{ background:var(--accent-color) !important; color:#fff !important; border-color:var(--accent-color) !important; }
+#page-garden .garden-daily{ background:var(--secondary-bg) !important; border:1px solid var(--border-color) !important; }
+#page-garden .garden-daily-title{ color:var(--text-primary) !important; }
+#page-garden .garden-daily-task{ background:var(--primary-bg) !important; color:var(--text-secondary) !important; border:1px solid var(--border-color) !important; }
+#page-garden .garden-daily-task.done{ background:rgba(var(--accent-color-rgb),.15) !important; color:var(--accent-color) !important; border-color:rgba(var(--accent-color-rgb),.35) !important; }
+#page-garden .garden-achv{ background:var(--secondary-bg) !important; border:1px solid var(--border-color) !important; }
+#page-garden .garden-achv-title{ color:var(--text-primary) !important; }
+
+/* 外观三态按钮更清晰 */
+#theme-mode-toggle{
+  background:rgba(var(--accent-color-rgb),.12) !important;
+  border:1.5px solid var(--accent-color) !important;
+  color:var(--accent-color) !important;
+  font-weight:600; min-width:112px;
+}
+
+
+/* 省略号按钮与视频通话/表情同一套配色 */
+#games-hub-btn{ background-color: var(--toolbar-btn-bg, var(--message-received-bg)); color: var(--toolbar-btn-color, var(--text-secondary)); }
+#games-hub-btn:hover{ color: var(--text-primary); }
+
+/* ===== 沉浸模式：微信式顶部条 ===== */
+#immersive-bar{ display:none; }
+body.immersive-mode #immersive-bar{
+  display:flex; position:fixed; top:0; left:0; right:0; z-index:9998;
+  height:calc(52px + env(safe-area-inset-top,0px));
+  padding:env(safe-area-inset-top,0px) 8px 0;
+  align-items:center; gap:4px;
+  background:var(--header-bg, var(--secondary-bg));
+  border-bottom:1px solid var(--border-color);
+}
+#immersive-bar .ib-back,#immersive-bar .ib-set{
+  width:40px;height:40px;display:flex;align-items:center;justify-content:center;
+  color:var(--text-primary);cursor:pointer;border-radius:10px;flex-shrink:0;
+}
+#immersive-bar .ib-back:active,#immersive-bar .ib-set:active{ background:rgba(127,127,127,.12); }
+#immersive-bar .ib-name{
+  flex:1;min-width:0;text-align:center;font-size:15px;font-weight:600;
+  color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+body.immersive-mode .chat-container{ padding-top:calc(52px + env(safe-area-inset-top,0px)) !important; }
+body.immersive-mode #immersive-exit-btn{ display:none !important; }
+
+/* ===== 整页锁定：只有聊天记录区域滚动 ===== */
+html, body{
+  height:100% !important;
+  max-height:100% !important;
+  overflow:hidden !important;
+  overscroll-behavior:none;
+}
+body{
+  position:fixed !important;
+  top:0 !important; left:0 !important; right:0 !important; bottom:0 !important;
+  height:100dvh !important;
+}
+.main-chat-area{ min-height:0 !important; overflow:hidden; }
+.chat-container{
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* ===== 陪伴设置弹窗：不透明背景（不影响陪伴页壁纸） ===== */
+.companion-modal{ background:rgba(0,0,0,.6) !important; }
+.companion-setup-content,
+.companion-time-content,
+.companion-modal-content{
+  background:var(--primary-bg) !important;
+  border:1px solid var(--border-color);
+}
+
+/* 图片查看器 */
+#iv-overlay{ position:fixed; inset:0; z-index:10050; background:rgba(0,0,0,.92); display:none; align-items:center; justify-content:center; }
+#iv-overlay.show{ display:flex; }
+#iv-overlay .iv-img{ max-width:94vw; max-height:88vh; object-fit:contain; border-radius:8px; }
+#iv-overlay .iv-close{ position:absolute; top:14px; right:16px; width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,.15); color:#fff; font-size:22px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+#iv-overlay .iv-idx{ position:absolute; bottom:20px; left:0; right:0; text-align:center; color:#fff; font-size:13px; opacity:.8; }
+
+/* 聊天图片列表 */
+#cig-overlay{ position:fixed; inset:0; z-index:10040; background:var(--primary-bg); display:flex; flex-direction:column; opacity:0; transition:opacity .2s; }
+#cig-overlay.show{ opacity:1; }
+.cig-head{ display:flex; align-items:center; justify-content:space-between; padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px; border-bottom:1px solid var(--border-color); font-size:15px; font-weight:600; color:var(--text-primary); }
+.cig-close{ width:34px;height:34px;border-radius:50%;border:none;background:rgba(127,127,127,.12);color:var(--text-primary);font-size:18px;cursor:pointer; }
+.cig-grid{ flex:1; overflow-y:auto; display:grid; grid-template-columns:repeat(3,1fr); gap:4px; padding:6px; }
+.cig-grid img{ width:100%; aspect-ratio:1; object-fit:cover; border-radius:6px; cursor:pointer; background:var(--secondary-bg); }
+.cig-empty{ grid-column:1/-1; text-align:center; color:var(--text-secondary); padding:60px 0; font-size:13px; }
+
+/* 聊天记录 · 图片 tab */
+.stats-img-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:4px; }
+.stats-img-grid img{ width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; cursor:pointer; background:var(--secondary-bg); }
+
+/* 图片 tab 可滚动（图片多了下滑） */
+#images-panel{ max-height:58vh; overflow-y:auto; overscroll-behavior:contain; }
+
+/* 图片 tab 按月分组 */
+.stats-img-jump{ position:sticky; top:0; z-index:3; background:var(--primary-bg); padding:0 0 8px; }
+.stats-img-jump select{ width:100%; font-family:inherit; font-size:12px; padding:8px 10px; border-radius:10px; border:1px solid var(--border-color); background:var(--secondary-bg); color:var(--text-primary); }
+.stats-img-month{ position:sticky; top:44px; z-index:2; background:var(--primary-bg); font-size:12px; font-weight:600; color:var(--text-secondary); padding:8px 2px 6px; }
+
+/* 图片 tab 收纳式查找 + 时间轴美化 */
+.simg-head{ display:flex; align-items:center; justify-content:space-between; padding:0 2px 8px; }
+.simg-count{ font-size:12px; color:var(--text-secondary); }
+.simg-jump-btn{ width:32px; height:32px; border-radius:9px; border:1px solid var(--border-color); background:var(--secondary-bg); color:var(--accent-color); font-size:13px; cursor:pointer; }
+.simg-jump-wrap{ display:none; padding-bottom:8px; }
+.simg-jump-wrap.show{ display:block; }
+.simg-jump-wrap select{ width:100%; font-family:inherit; font-size:12px; padding:8px 10px; border-radius:10px; border:1px solid var(--border-color); background:var(--secondary-bg); color:var(--text-primary); }
+.stats-img-month{ display:flex; align-items:center; gap:8px; position:sticky; top:0; z-index:2; background:var(--primary-bg); font-size:12px; font-weight:600; color:var(--text-primary); padding:10px 2px 8px; }
+.stats-img-month::before{ content:''; width:8px; height:8px; border-radius:50%; background:var(--accent-color); box-shadow:0 0 0 3px rgba(var(--accent-color-rgb),.15); flex-shrink:0; }
+.stats-img-grid{ margin-bottom:10px; }
+.stats-img-grid img{ border-radius:10px; }
+
+.simg-head{ justify-content:flex-end !important; }
+
+/* 统计弹窗可滚动 */
+#stats-modal .modal-content{ max-height:88vh; overflow-y:auto; overscroll-behavior:contain; }
+
+/* 图片 tab 标题（像日记） */
+.simg-head{ justify-content:flex-start !important; gap:10px; }
+.simg-title{ font-size:17px; font-weight:700; color:var(--text-primary); border-bottom:2px solid var(--accent-color); padding-bottom:3px; }
+.simg-jump-btn{ border:none !important; background:transparent !important; width:28px; height:28px; padding:0; color:var(--text-secondary); font-size:16px; }
+
+/* 月份选择器适配 */
+.simg-jump-wrap{ padding:6px 2px 10px; }
+.simg-jump-wrap input[type="month"]{
+  appearance:none; -webkit-appearance:none;
+  width:100%; padding:10px 12px; border-radius:12px;
+  border:1px solid var(--border-color); background:var(--secondary-bg);
+  color:var(--text-primary); font-family:inherit; font-size:13px;
+  box-shadow:0 2px 8px rgba(0,0,0,.04);
+}
+.simg-jump-wrap input[type="month"]::-webkit-calendar-picker-indicator{ opacity:.55; cursor:pointer; }
+.simg-jump-btn{ border-radius:10px !important; }
+
+/* 省略号红点 */
+.hub-btn-dot{ position:absolute; top:5px; right:7px; width:8px; height:8px; border-radius:50%; background:#ff3b30; border:1.5px solid var(--primary-bg); z-index:2; display:none; }
+.hub-item-dot{ position:absolute; top:8px; right:10px; width:8px; height:8px; border-radius:50%; background:#ff3b30; display:none; }
+
+/* 统计弹窗：底部按钮固定 */
+#stats-modal .modal-content{ max-height:88vh !important; overflow-y:auto !important; padding-bottom:0 !important; }
+#stats-modal .modal-content > .modal-buttons{
+  position:sticky !important; bottom:0 !important; z-index:6;
+  background:var(--secondary-bg) !important;
+  box-shadow:0 -6px 14px rgba(0,0,0,.05);
+}
+#stats-modal #stats-panel, #stats-modal #wordcloud-panel, #stats-modal #images-panel,
+#stats-modal #search-panel, #stats-modal #favorites-panel{ padding-bottom:8px; }
+
+
+/* 统计：表情包排行 */
+.stk-group-label{ font-size:12px; color:var(--text-secondary); margin-bottom:6px; }
+.stk-rank{ display:flex; gap:8px; flex-wrap:wrap; }
+.stk-rank-item{ display:flex; flex-direction:column; align-items:center; gap:3px; width:58px; }
+.stk-rank-item img{ width:48px; height:48px; object-fit:contain; border-radius:10px; background:var(--secondary-bg); }
+.stk-rank-no{ font-size:10px; color:var(--accent-color); font-weight:600; }
+.stk-rank-n{ font-size:10px; color:var(--text-secondary); }
+.stats-empty-mini{ font-size:12px; color:var(--text-secondary); padding:6px 0; }

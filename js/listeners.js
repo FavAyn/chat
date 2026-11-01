@@ -571,7 +571,7 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
         '#read-receipts-toggle': { prop: 'readReceiptsEnabled', name: '已读回执' },
         '#typing-indicator-toggle': { prop: 'typingIndicatorEnabled', name: '正在输入' },
         '#read-no-reply-toggle': { prop: 'allowReadNoReply', name: '已读不回' },
-        '#emoji-mix-toggle': { prop: 'emojiMixEnabled', name: '表情消息' }
+            '#emoji-mix-toggle': { prop: 'emojiMixEnabled', name: '表情消息' }
     };
     for (const [selector, { prop }] of Object.entries(toggleSyncMap)) {
         const el = document.querySelector(selector);
@@ -1236,8 +1236,10 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
                 '#typing-indicator-toggle': {
                     prop: 'typingIndicatorEnabled', name: '正在输入'},
                     '#read-no-reply-toggle': { prop: 'allowReadNoReply', name: '已读不回' },
-                    '#emoji-mix-toggle': { prop: 'emojiMixEnabled', name: '表情混入消息' },
-                    '#pinyin-mode-toggle': { prop: 'pinyinMode', name: '拼音模式' },
+                    '#pinyin-mode-toggle': {
+                prop: 'pinyinMode', name: '拼音模式'
+            },
+            '#emoji-mix-toggle': { prop: 'emojiMixEnabled', name: '表情混入消息' },
                     '#correct-mode-toggle': { prop: 'correctMode', name: '纠错模式' }
 };
 
@@ -1256,12 +1258,26 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
                     throttledSaveData();
                     updateUI();
                     element.classList.toggle('active', !!settings[prop]);
+                    if (prop === 'pinyinMode') { var _pc=document.getElementById('pinyin-mode-control'); if(_pc) _pc.style.display = settings[prop] ? 'block' : 'none'; }
                     if (prop !== 'soundEnabled') renderMessages(true);
                     showNotification(`${name}已${settings[prop] ? '开启': '关闭'}`, 'success');
                 });
             }
 
-            const soundVolSlider = document.getElementById('sound-volume-slider');
+            (function(){
+        var prob=document.getElementById('pinyin-prob-slider'), probV=document.getElementById('pinyin-prob-value');
+        var dur=document.getElementById('pinyin-dur-slider'), durV=document.getElementById('pinyin-dur-value');
+        var ctrl=document.getElementById('pinyin-mode-control');
+        if(ctrl) ctrl.style.display = settings.pinyinMode ? 'block' : 'none';
+        if(prob){ prob.value = (typeof settings.pinyinProb==='number'?settings.pinyinProb:20); }
+        if(probV) probV.textContent = (prob?prob.value:20)+'%';
+        if(dur){ dur.value = (settings.pinyinDuration||10); }
+        if(durV) durV.textContent = (dur?dur.value:10)+'分钟';
+        if(prob){ prob.addEventListener('input', function(){ if(probV) probV.textContent=prob.value+'%'; }); prob.addEventListener('change', function(){ settings.pinyinProb=parseInt(prob.value,10)||20; if(typeof throttledSaveData==='function') throttledSaveData(); }); }
+        if(dur){ dur.addEventListener('input', function(){ if(durV) durV.textContent=dur.value+'分钟'; }); dur.addEventListener('change', function(){ settings.pinyinDuration=parseInt(dur.value,10)||10; if(typeof throttledSaveData==='function') throttledSaveData(); }); }
+    })();
+
+    const soundVolSlider = document.getElementById('sound-volume-slider');
             const soundVolVal = document.getElementById('sound-volume-value');
             if (soundVolSlider) {
                 soundVolSlider.value = Math.round((settings.soundVolume || 0.15) * 100);

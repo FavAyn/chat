@@ -3,6 +3,7 @@ window.switchStatsTab = function(tab) {
     var favoritesPanel = document.getElementById('favorites-panel');
     var searchPanel = document.getElementById('search-panel');
     var wordcloudPanel = document.getElementById('wordcloud-panel');
+    var imagesPanel = document.getElementById('images-panel');
     var allBtns = document.querySelectorAll('.stats-nav-btn');
     allBtns.forEach(function(b) { b.classList.remove('active'); });
     var activeBtn = document.querySelector('.stats-nav-btn[data-tab="' + tab + '"]');
@@ -12,6 +13,7 @@ window.switchStatsTab = function(tab) {
     if (favoritesPanel) favoritesPanel.style.display = 'none';
     if (searchPanel) searchPanel.style.display = 'none';
     if (wordcloudPanel) wordcloudPanel.style.display = 'none';
+    if (imagesPanel) imagesPanel.style.display = 'none';
 
     if (tab === 'stats') {
         if (statsPanel) statsPanel.style.display = 'block';
@@ -21,6 +23,9 @@ window.switchStatsTab = function(tab) {
             var inp = document.getElementById('msg-search-input');
             if (inp) inp.focus();
         }, 100);
+    } else if (tab === 'images') {
+        if (imagesPanel) imagesPanel.style.display = 'block';
+        requestAnimationFrame(function(){ if (typeof window._renderChatImagesGrid === 'function') window._renderChatImagesGrid(imagesPanel); });
     } else if (tab === 'wordcloud') {
         if (wordcloudPanel) wordcloudPanel.style.display = 'block';
         requestAnimationFrame(function() {

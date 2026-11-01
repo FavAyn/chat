@@ -22,8 +22,13 @@
   function buildTop(modal) {
     var body = modal.querySelector('.gh-body');
     body.innerHTML = '<div class="gh-grid">' +
-        item('garden', '🌸', '花园', true) +
-        item('games', '🎮', '小游戏', true) +
+        item('immersive', '\u2728', '全屏', true) +
+        item('garden', '\uD83C\uDF38', '花园', true) +
+        item('games', '\uD83C\uDFAE', '小游戏', true) +
+        item('diary', '\uD83D\uDCD2', '日记', true) +
+        item('survey', '\uD83D\uDCCB', '问卷', true) +
+        item('inbox', '\u2709\uFE0F', '信箱', true) +
+        item('customreplies', '\uD83D\uDCAC', '自定义回复', true) +
       '</div>';
     bind(modal);
   }
@@ -52,7 +57,11 @@
         var k = b.getAttribute('data-hub');
         if (k === 'games') { buildGames(modal); return; }
         close(modal);
-        if (k === 'garden' && typeof window._mochiGardenOpen === 'function') { window._mochiGardenOpen(); }
+        if (k === 'customreplies') { var _b=document.getElementById('custom-replies-function'); if(_b) _b.click(); }
+        else if (k === 'inbox') { var _b2=document.getElementById('envelope-function'); if(_b2) _b2.click(); }
+        else if (k === 'survey') { var _b3=document.getElementById('survey-function'); if(_b3) _b3.click(); }
+        else if (k === 'diary') { if(typeof window.openMomentsWithTransition==='function') window.openMomentsWithTransition(); setTimeout(function(){ if(typeof window.csSwitchTab==='function') window.csSwitchTab('diary'); },400); }
+        else if (k === 'immersive') { if (typeof window.toggleImmersiveMode === 'function') window.toggleImmersiveMode(true); } else if (k === 'garden' && typeof window._mochiGardenOpen === 'function') { window._mochiGardenOpen(); }
         else if (k === 'gomoku' && typeof window.openGomokuPanel === 'function') { window.openGomokuPanel(); }
         else if (k === 'memory' && typeof window.openMemoryPanel === 'function') { window.openMemoryPanel(); }
         else if (k === 'c4' && typeof window.openC4Panel === 'function') { window.openC4Panel(); }
