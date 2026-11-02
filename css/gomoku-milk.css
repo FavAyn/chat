@@ -274,23 +274,19 @@ body.immersive-mode #immersive-bar{
 body.immersive-mode .chat-container{ padding-top:calc(52px + env(safe-area-inset-top,0px)) !important; }
 body.immersive-mode #immersive-exit-btn{ display:none !important; }
 
-/* ===== 整页锁定：只有聊天记录区域滚动 ===== */
+
+/* ===== 整页锁定（安全版：不用 body fixed，避免 iOS 点击错位/灰雾） ===== */
 html, body{
-  height:100% !important;
-  max-height:100% !important;
-  overflow:hidden !important;
-  overscroll-behavior:none;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+  overscroll-behavior: none;
 }
-body{
-  position:fixed !important;
-  top:0 !important; left:0 !important; right:0 !important; bottom:0 !important;
-  height:100dvh !important;
-}
-.main-chat-area{ min-height:0 !important; overflow:hidden; }
-.chat-container{
-  overscroll-behavior:contain;
-  -webkit-overflow-scrolling:touch;
-}
+body{ position: relative !important; }
+.main-chat-area{ min-height:0 !important; }
+.chat-container{ overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+#iv-overlay{ pointer-events:none; }
+#iv-overlay.show{ pointer-events:auto; }
 
 /* ===== 陪伴设置弹窗：不透明背景（不影响陪伴页壁纸） ===== */
 .companion-modal{ background:rgba(0,0,0,.6) !important; }
@@ -386,3 +382,105 @@ body{
 .stk-rank-no{ font-size:10px; color:var(--accent-color); font-weight:600; }
 .stk-rank-n{ font-size:10px; color:var(--text-secondary); }
 .stats-empty-mini{ font-size:12px; color:var(--text-secondary); padding:6px 0; }
+
+/* 顶部/底部不透明（去掉灰雾） */
+.header{
+  opacity:1 !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  background-color:var(--primary-bg) !important;
+}
+.input-area-wrapper{
+  background-color:var(--primary-bg) !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+}
+
+/* 消息区禁文本选择（防止长按出系统菜单） */
+#chat-container .message,
+#chat-container .message *{
+  -webkit-user-select:none !important;
+  user-select:none !important;
+  -webkit-touch-callout:none !important;
+}
+
+
+/* 关闭“使用前声明”开屏（避免白屏卡住） */
+#splash-declaration{ display:none !important; }
+#tour-overlay{ display:none !important; }
+
+/* 心情手账详情/编辑：手机小屏可滚动，不被裁 */
+.mood-selector-overlay{ overflow-y:auto !important; padding:24px 0 !important; }
+#mood-detail-view, #mood-editor-view{ max-height:82vh !important; overflow-y:auto !important; }
+
+/* 自定义心情：对话框全局可用，入口移到回复库 */
+#custom-mood-dialog{ position:fixed !important; z-index:4000 !important; }
+#mood-custom-add{ display:none !important; }
+
+/* 回复库五个 tab 排一行 */
+#cr-sub-tabs.reply-tabs{ flex-wrap:nowrap !important; gap:6px !important; padding:0 12px 12px !important; overflow-x:auto; }
+#cr-sub-tabs .reply-tab-btn{ flex:1 1 0 !important; min-width:0 !important; padding:7px 2px !important; font-size:11px !important; }
+
+/* 长按操作条对齐气泡 */
+.message-wrapper.sent .message-meta-actions{ left:auto !important; right:0 !important; }
+.message-wrapper.received .message-meta-actions{ right:auto !important; left:0 !important; }
+
+/* 操作条悬浮在气泡上方 */
+.message-meta-actions{ top:-38px !important; }
+
+/* 操作条：右下角对齐气泡右上角（双方一致） */
+.message-wrapper .message-meta-actions,
+.message-wrapper.sent .message-meta-actions,
+.message-wrapper.received .message-meta-actions{
+  left:auto !important;
+  right:0 !important;
+  top:auto !important;
+  bottom:100% !important;
+  margin-bottom:4px;
+}
+
+/* 操作条强制：右下角对齐气泡右上角 */
+#chat-container .message-wrapper .message-meta-actions{
+  left:auto !important;
+  right:0 !important;
+  top:auto !important;
+  bottom:calc(100% + 2px) !important;
+  margin:0 !important;
+}
+
+/* 操作条相对气泡容器定位（不含头像），右下角对齐气泡右上角 */
+.message-content-wrapper{ position:relative !important; }
+#chat-container .message-content-wrapper .message-meta-actions{
+  left:auto !important;
+  right:0 !important;
+  top:auto !important;
+  bottom:calc(100% + 2px) !important;
+  margin:0 !important;
+}
+
+/* 回复库·心情网格 */
+.mood-lib-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; padding:14px; }
+.mood-lib-item{ display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 4px; background:var(--primary-bg); border-radius:12px; border:1px solid var(--border-color); }
+.mood-lib-emoji{ font-size:24px; line-height:1; }
+.mood-lib-name{ font-size:12px; color:var(--text-primary); }
+
+/* 心情删除按钮 */
+.mood-lib-item{ position:relative; }
+.mood-lib-del{ position:absolute; top:2px; right:4px; width:18px; height:18px; border:none; border-radius:50%; background:rgba(255,80,80,.12); color:#ff5050; font-size:12px; line-height:1; cursor:pointer; padding:0; }
+
+/* 心情删除标：点击才显示，样式同字卡 */
+.mood-lib-del{ display:none !important; }
+.mood-lib-item.sel .mood-lib-del{ display:flex !important; align-items:center; justify-content:center; }
+.mood-lib-item{ cursor:pointer; }
+.mood-lib-item.sel{ border-color:var(--accent-color); background:rgba(var(--accent-color-rgb),.08); }
+.mood-lib-del{ background:rgba(127,127,127,.18) !important; color:var(--text-primary) !important; }
+
+/* 心情删除标：低存在感 */
+.mood-lib-del{
+  background:transparent !important;
+  color:var(--text-secondary) !important;
+  opacity:.55;
+  font-size:10px !important;
+  width:16px !important; height:16px !important;
+}
+.mood-lib-item.sel .mood-lib-del{ opacity:.8; }

@@ -1824,10 +1824,10 @@ if (appBtn && page) appBtn.addEventListener("click", openGarden);
 
 var backBtn = document.getElementById("garden-back");
 if (backBtn) backBtn.addEventListener("click", function () {
-  document.querySelectorAll(".page").forEach(function (pg) { pg.hidden = true; });
-  var home = document.getElementById("page-phone");
-  if (home) home.hidden = false;
-  try { document.dispatchEvent(new CustomEvent("garden-leave")); } catch (e) {}
+    document.querySelectorAll(".page").forEach(function (pg) { pg.hidden = true; });
+    try { if (typeof window.openMomentsModal === 'function') window.openMomentsModal(); } catch (e) {}
+    try { var _cs = document.getElementById('couple-space-page'); if (_cs && getComputedStyle(_cs).display === 'none') _cs.style.display = ''; } catch (e) {}
+    try { document.dispatchEvent(new CustomEvent("garden-leave")); } catch (e) {}
 });
 
 document.addEventListener("garden-enter", function () {

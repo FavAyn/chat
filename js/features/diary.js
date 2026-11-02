@@ -36,7 +36,7 @@
       return '<option value="' + esc(o.key) + '"' + (o.key === e.user ? ' selected' : '') + '>' + esc(o.kaomoji + ' ' + o.label) + '</option>';
     }).join('');
     var ov = document.createElement('div'); ov.id = 'diary-editor'; ov.className = 'gi-overlay'; ov.style.padding = '0';
-    ov.innerHTML = '<div class="gi-card" style="max-width:100%;width:100%;height:100%;max-height:100%;border-radius:0;display:flex;flex-direction:column;"><div class="gi-title" style="font-size:16px;">日记 · ' + esc(ds) + '</div>' +
+    ov.innerHTML = '<div class="gi-card" style="max-width:100%;width:100%;height:100%;max-height:100%;border-radius:0;display:flex;flex-direction:column;"><div class="gi-title" style="font-size:16px;display:flex;align-items:center;gap:10px;">日记 <input type="date" id="diary-date-input" value="' + esc(ds) + '" style="font-family:inherit;font-size:14px;padding:6px 10px;border-radius:8px;border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);"></div>' +
       '<select id="diary-mood-select" style="width:100%;margin-bottom:12px;padding:12px 14px;border-radius:12px;border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);font-family:inherit;font-size:16px;">' + opts + '</select>' +
       '<textarea id="diary-note-input" rows="8" style="width:100%;box-sizing:border-box;padding:14px;border-radius:12px;border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);font-family:inherit;font-size:15px;line-height:1.8;flex:1;min-height:0;resize:none;"></textarea>' +
       '<div class="gi-btns" style="margin-top:12px;"><button class="gi-no" id="diary-cancel">取消</button><button class="gi-ok" id="diary-save">保存</button></div></div>';
@@ -47,8 +47,11 @@
     document.getElementById('diary-save').onclick = function () {
       var user = document.getElementById('diary-mood-select').value;
       var note = document.getElementById('diary-note-input').value.trim();
+      var _dEl = document.getElementById('diary-date-input');
+      var _ds = (_dEl && _dEl.value) ? _dEl.value : ds;
       if (!window.moodData) window.moodData = {};
-      window.moodData[ds] = window.moodData[ds] || {};
+      window.moodData[_ds] = window.moodData[_ds] || {};
+      ds = _ds;
       window.moodData[ds].user = user;
       window.moodData[ds].note = note;
       try { if (typeof window.saveMoodData === 'function') window.saveMoodData(); } catch (x) {}
@@ -62,6 +65,10 @@
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   }
   window._diaryRender = render;
+  window._openDiaryEditorFor = function (ds) {
+    try { if (typeof window.closeMoodOverlay === 'function') window.closeMoodOverlay(); } catch (e) {}
+    setTimeout(function () { openEditor(ds || todayStr()); }, 120);
+  };
   document.addEventListener('click', function (ev) {
     var b = ev.target.closest && ev.target.closest('#csp-diary');
     if (b) setTimeout(render, 60);

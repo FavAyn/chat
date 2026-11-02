@@ -9,8 +9,8 @@
     '.gh-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:4px 0 12px}' +
     '.gh-item{display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 6px;border:1px solid var(--border-color);border-radius:14px;background:var(--primary-bg);cursor:pointer;transition:all .2s;font-family:inherit}' +
     '.gh-item:hover{border-color:var(--accent-color);background:rgba(var(--accent-color-rgb),.08)}' +
-    '.gh-emoji{font-size:26px;line-height:1}' +
-    '.gh-label{font-size:12px;color:var(--text-primary);font-weight:600}' +
+    '.gh-emoji{width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:22px;line-height:1}' +
+    '.gh-label{font-size:11.5px;color:var(--text-primary);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}' +
     '.gh-back{display:flex;align-items:center;gap:6px;margin:0 0 10px;padding:6px 10px;border:none;background:rgba(var(--accent-color-rgb),.1);color:var(--accent-color);border-radius:10px;font-size:12px;cursor:pointer;font-family:inherit}';
   (document.head || document.documentElement).appendChild(st);
 
@@ -41,9 +41,7 @@
         item('gomoku', '⚫', '五子棋', !!window.openGomokuPanel) +
         item('memory', '🃏', '记忆翻牌', !!window.openMemoryPanel) +
         item('c4', '🔴', '四子棋', !!window.openC4Panel) +
-        item('snake', '🐍', '贪吃蛇', !!window.openSnakePanel) +
         item('pong', '🏓', 'Pong', !!window.openPongPanel) +
-        item('brick', '🧱', '打砖块', !!window.openBrickPanel) +
         item('ms', '💣', '合作扫雷', !!window.openMsPanel) +
       '</div>';
     var back = body.querySelector('#gh-back');
@@ -65,9 +63,7 @@
         else if (k === 'gomoku' && typeof window.openGomokuPanel === 'function') { window.openGomokuPanel(); }
         else if (k === 'memory' && typeof window.openMemoryPanel === 'function') { window.openMemoryPanel(); }
         else if (k === 'c4' && typeof window.openC4Panel === 'function') { window.openC4Panel(); }
-        else if (k === 'snake' && typeof window.openSnakePanel === 'function') { window.openSnakePanel(); }
         else if (k === 'pong' && typeof window.openPongPanel === 'function') { window.openPongPanel(); }
-        else if (k === 'brick' && typeof window.openBrickPanel === 'function') { window.openBrickPanel(); }
         else if (k === 'ms' && typeof window.openMsPanel === 'function') { window.openMsPanel(); }
         else if (typeof showNotification === 'function') { showNotification('该功能即将上线', 'info'); }
       };

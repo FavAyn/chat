@@ -697,9 +697,9 @@
 
         // 如果没指定 mode，随机选一个
         if (!mode) {
-            const modes = Object.keys(MODES);
-            mode = modes[Math.floor(Math.random() * modes.length)];
-        }
+      const modes = Object.keys(MODES);
+      mode = modes[Math.floor(Math.random() * modes.length)];
+    }
         currentMode = mode;
         const cfg = MODES[mode];
         const partnerName = getPartnerName();
@@ -707,7 +707,14 @@
         const baseLine = pickRandom(INVITE_LINES[mode] || INVITE_LINES.study);
 
         // 梦角自选时间（从 inviteTimes 池里随机选一个）
-        const inviteTime = pickRandom(cfg.inviteTimes || [25]);
+        let inviteTime;
+    (function () {
+      const _now = new Date(), _h = _now.getHours(), _m = _now.getMinutes();
+      const _night = (_h >= 22) || (_h < 5);
+      const _pool = cfg.inviteTimes || [25];
+      if (_night && _pool.indexOf('rest') >= 0) inviteTime = 'rest';
+      else inviteTime = pickRandom(_pool);
+    })();
 
         // 拼接邀请文案：智能处理"陪你"是否已经在台词里 + rest 特殊处理
         let line;
@@ -907,6 +914,19 @@
             || document.getElementById('call-mini-pill')?.classList.contains('visible');
         // 陪伴中或通话中，什么都不触发
         if (isCompanionActive || isCallActive) return;
+
+        // 22:00~05:00：25% 一起睡觉，75% 视频通话
+        const _hN = new Date().getHours();
+        if (_hN >= 22 || _hN < 5) {
+            if (Math.random() < 0.5) {
+                showIncomingCompanion('sleep');
+            } else if (window._callModule && window._callModule.isEnabled()) {
+                window._callModule.showIncomingCall();
+            } else {
+                showIncomingCompanion('sleep');
+            }
+            return;
+        }
 
         // 如果视频通话模块未启用，强制走陪伴邀请
         const callAvailable = window._callModule && window._callModule.isEnabled();

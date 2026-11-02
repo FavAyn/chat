@@ -771,10 +771,11 @@ const LIBRARY_CONFIG = {
     reply: {
         title: "回复库管理",
         tabs: [
-            { id: 'custom', name: '主字卡', mode: 'list' },
+            { id: 'custom', name: '字卡', mode: 'list' },
             { id: 'emojis', name: 'Emoji', mode: 'grid' },
             { id: 'stickers', name: '表情库', mode: 'grid' },
-            { id: 'pinyinPhrases', name: '拼音短句', mode: 'list' }
+            { id: 'pinyinPhrases', name: '拼音', mode: 'list' },
+            { id: 'customMood', name: '心情', mode: 'list' }
         ]
     },
     atmosphere: {
@@ -1659,7 +1660,7 @@ function createMessageFragment(msg, prevMsg, nextMsg, lastSenderRef) {
     }
 
     let actionsHTML = '';
-    if (settings.replyEnabled) actionsHTML += `<button class="meta-action-btn reply-btn" title="回复"><i class="fas fa-reply"></i></button>`;
+    actionsHTML += `<button class="meta-action-btn reply-btn" title="回复"><i class="fas fa-reply"></i></button>`;
     const starIcon = msg.favorited ? 'fas fa-star' : 'far fa-star';
     actionsHTML += `<button class="meta-action-btn favorite-action-btn ${msg.favorited ? 'favorited' : ''}" title="${msg.favorited ? '取消收藏' : '收藏'}"><i class="${starIcon}"></i></button>`;
     actionsHTML += `<button class="meta-action-btn delete-btn" title="删除"><i class="fas fa-trash-alt"></i></button>`;

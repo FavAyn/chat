@@ -309,15 +309,18 @@ window._setMoodData = function(importedMoodData, importedCustomMoodOptions) {
     }
 };
 function saveCustomMoodOptions() {
-    localforage.setItem(getStorageKey('customMoodOptions'), customMoodOptions);
-}
+        localforage.setItem(getStorageKey('customMoodOptions'), customMoodOptions);
+        try { if (typeof renderReplyLibrary === 'function') renderReplyLibrary(); } catch (e) {}
+    }
 
 function saveMoodTrash() {
     localforage.setItem(getStorageKey('moodTrash'), moodTrash).catch(() => {});
     window.moodTrash = moodTrash;
 }
+let moodHiddenKeys = [];
+try { var _mhk = JSON.parse(localStorage.getItem('moodHiddenKeys_v1') || '[]'); if (Array.isArray(_mhk)) moodHiddenKeys = _mhk; } catch (e) { moodHiddenKeys = []; }
 function getAllMoodOptions() {
-    return [...MOOD_OPTIONS, ...customMoodOptions];
+    return [...MOOD_OPTIONS, ...customMoodOptions].filter(function (mo) { return moodHiddenKeys.indexOf(mo.key) < 0; });
 }
 window.getAllMoodOptions = getAllMoodOptions;
 function formatDateStr(date) {
@@ -1121,11 +1124,18 @@ window.saveCustomMood = function() {
     if (typeof playSound === 'function') playSound('mood');
 };
 
-window.deleteCustomMood = function(key) {
-    customMoodOptions = customMoodOptions.filter(m => m.key !== key);
-    saveCustomMoodOptions();
+window.deleteCustomMood = function (key) {
+    var _isCustom = customMoodOptions.some(function (m) { return m.key === key; });
+    if (_isCustom) {
+        customMoodOptions = customMoodOptions.filter(function (m) { return m.key !== key; });
+        saveCustomMoodOptions();
+    } else {
+        if (moodHiddenKeys.indexOf(key) < 0) moodHiddenKeys.push(key);
+        try { localStorage.setItem('moodHiddenKeys_v1', JSON.stringify(moodHiddenKeys)); } catch (e) {}
+    }
     renderMoodOptionsGrid(currentMoodSelection);
-    showNotification('已删除自定义心情', 'success');
+    try { if (typeof renderReplyLibrary === 'function') renderReplyLibrary(); } catch (e) {}
+    showNotification('已删除心情', 'success');
     if (typeof playSound === 'function') playSound('mood');
 };
 

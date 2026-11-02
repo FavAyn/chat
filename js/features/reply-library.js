@@ -135,6 +135,31 @@ function _renderListContentOnly() {
         if (child !== toolbar) child.remove();
     });
 
+    if (currentSubTab === 'customMood') {
+        var _moods = (typeof window.getAllMoodOptions === 'function' ? window.getAllMoodOptions() : []) || [];
+        if (!_moods.length) _moods = [{key:'happy',kaomoji:'😆',label:'开心'},{key:'excited',kaomoji:'🥰',label:'兴奋'},{key:'peace',kaomoji:'☺️',label:'平淡'},{key:'sad',kaomoji:'😕',label:'难过'},{key:'tired',kaomoji:'😞',label:'疲惫'},{key:'angry',kaomoji:'😠',label:'生气'},{key:'love',kaomoji:'🥰',label:'想你'},{key:'busy',kaomoji:'😵‍💫',label:'忙碌'},{key:'sleepy',kaomoji:'😴',label:'困困'},{key:'lonely',kaomoji:'🥹',label:'孤单'},{key:'cool',kaomoji:'😎',label:'潇洒'},{key:'cute',kaomoji:'🥺',label:'撒娇'}];
+        var _grid = _moods.map(function (m) {
+            return '<div class="mood-lib-item"><button class="mood-lib-del" data-key="' + m.key + '" title="删除"><i class="fas fa-trash-alt"></i></button><span class="mood-lib-emoji">' + m.kaomoji + '</span><span class="mood-lib-name">' + m.label + '</span></div>';
+        }).join('');
+        list.innerHTML = '<div class="mood-lib-grid">' + _grid + '</div>';
+        list.querySelectorAll('.mood-lib-item').forEach(function (it) {
+            it.addEventListener('click', function (e) {
+                if (e.target.closest('.mood-lib-del')) return;
+                list.querySelectorAll('.mood-lib-item').forEach(function (x) { x.classList.remove('sel'); });
+                it.classList.add('sel');
+            });
+        });
+        list.querySelectorAll('.mood-lib-del').forEach(function (b) {
+            b.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var k = b.getAttribute('data-key');
+                if (typeof window.deleteCustomMood === 'function') window.deleteCustomMood(k);
+                else if (typeof showNotification === 'function') showNotification('默认心情不可删除', 'info');
+            });
+        });
+        return;
+    }
+
     let itemsToRender = [];
     let renderType = 'text';
 
@@ -230,6 +255,31 @@ function renderReplyLibrary() {
     if (activeTabConfig) list.classList.add(activeTabConfig.mode + '-mode');
 
     _renderModernToolbar();
+
+    if (currentSubTab === 'customMood') {
+        var _moods = (typeof window.getAllMoodOptions === 'function' ? window.getAllMoodOptions() : []) || [];
+        if (!_moods.length) _moods = [{key:'happy',kaomoji:'😆',label:'开心'},{key:'excited',kaomoji:'🥰',label:'兴奋'},{key:'peace',kaomoji:'☺️',label:'平淡'},{key:'sad',kaomoji:'😕',label:'难过'},{key:'tired',kaomoji:'😞',label:'疲惫'},{key:'angry',kaomoji:'😠',label:'生气'},{key:'love',kaomoji:'🥰',label:'想你'},{key:'busy',kaomoji:'😵‍💫',label:'忙碌'},{key:'sleepy',kaomoji:'😴',label:'困困'},{key:'lonely',kaomoji:'🥹',label:'孤单'},{key:'cool',kaomoji:'😎',label:'潇洒'},{key:'cute',kaomoji:'🥺',label:'撒娇'}];
+        var _grid = _moods.map(function (m) {
+            return '<div class="mood-lib-item"><button class="mood-lib-del" data-key="' + m.key + '" title="删除"><i class="fas fa-trash-alt"></i></button><span class="mood-lib-emoji">' + m.kaomoji + '</span><span class="mood-lib-name">' + m.label + '</span></div>';
+        }).join('');
+        list.innerHTML = '<div class="mood-lib-grid">' + _grid + '</div>';
+        list.querySelectorAll('.mood-lib-item').forEach(function (it) {
+            it.addEventListener('click', function (e) {
+                if (e.target.closest('.mood-lib-del')) return;
+                list.querySelectorAll('.mood-lib-item').forEach(function (x) { x.classList.remove('sel'); });
+                it.classList.add('sel');
+            });
+        });
+        list.querySelectorAll('.mood-lib-del').forEach(function (b) {
+            b.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var k = b.getAttribute('data-key');
+                if (typeof window.deleteCustomMood === 'function') window.deleteCustomMood(k);
+                else if (typeof showNotification === 'function') showNotification('默认心情不可删除', 'info');
+            });
+        });
+        return;
+    }
 
     let itemsToRender = [];
     let renderType = 'text';
@@ -878,7 +928,7 @@ function _renderEmojiTab(list, itemsToRender) {
             const div = document.createElement('div');
             div.className = 'emoji-item';
             div.style.position = 'relative';
-            div.innerHTML = `<span style="pointer-events:none;">${item}</span><span class="emoji-custom-del" style="position:absolute;top:-4px;right:-4px;font-size:10px;background:var(--text-secondary);color:#fff;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity 0.2s;">×</span>`;
+            div.innerHTML = `<span style="pointer-events:none;">${item}</span><span class="emoji-custom-del" style="position:absolute;top:-4px;right:-4px;font-size:10px;background:var(--text-secondary);color:#fff;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity 0.2s;"><i class="fas fa-trash-alt"></i></span>`;
             div.addEventListener('mouseenter', () => div.querySelector('.emoji-custom-del').style.opacity = '1');
             div.addEventListener('mouseleave', () => div.querySelector('.emoji-custom-del').style.opacity = '0');
             div.querySelector('.emoji-custom-del').addEventListener('click', e => {
@@ -2375,6 +2425,12 @@ function initReplyLibraryListeners() {
     const addBtn = document.getElementById('add-custom-reply');
     if (addBtn) {
         addBtn.addEventListener('click', () => {
+            if (currentSubTab === 'customMood') {
+                var _cmd = document.getElementById('custom-mood-dialog');
+                if (_cmd && _cmd.parentElement !== document.body) document.body.appendChild(_cmd);
+                if (typeof window.openCustomMoodDialog === 'function') window.openCustomMoodDialog();
+                return;
+            }
             if (currentSubTab === 'stickers') {
                 document.getElementById('sticker-file-input')?.click(); return;
             }

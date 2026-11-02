@@ -110,12 +110,13 @@
     var t = e.target;
     if (!t || t.tagName !== 'IMG') return;
     if (t.closest && t.closest('.stk-rank')) { e.preventDefault(); open([{ src: t.src }], 0); return; }
-    var area = t.closest('#chat-container') || t.closest('#companion-page');
+    var area = t.closest('#chat-container');
     if (!area) return;
     if (t.closest('.avatar-container') || t.closest('.avatar') || t.closest('.message-avatar')) return;
-    var all = Array.prototype.slice.call(area.querySelectorAll('img')).filter(function (x) {
+    var all = Array.prototype.slice.call(area.querySelectorAll('.message img, .message-image')).filter(function (x) {
       if (!x.src || x.naturalWidth < 8) return false;
       if (x.closest('.avatar-container') || x.closest('.avatar')) return false;
+      if (x.tagName !== 'IMG') return false;
       return true;
     });
     if (!all.length) return;

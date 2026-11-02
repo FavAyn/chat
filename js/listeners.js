@@ -49,7 +49,23 @@ function initChatActionListeners() {
                 }, LONG_PRESS_MS);
             }, { passive: false });
 
-            DOMElements.chatContainer.addEventListener('touchend', (e) => {
+            DOMElements.chatContainer.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    const wrapper = e.target.closest('.message-wrapper');
+    if (!wrapper) return;
+    if (e.target.closest('.message-meta-actions')) return;
+    _longPressTriggered = false;
+    _longPressTimer = setTimeout(() => {
+        _longPressTriggered = true;
+        _hideAllActions();
+        wrapper.classList.add('actions-visible');
+        if (window.getSelection) window.getSelection().removeAllRanges();
+    }, LONG_PRESS_MS);
+});
+DOMElements.chatContainer.addEventListener('mouseup', () => { clearTimeout(_longPressTimer); _longPressTimer = null; });
+DOMElements.chatContainer.addEventListener('mouseleave', () => { clearTimeout(_longPressTimer); _longPressTimer = null; });
+
+DOMElements.chatContainer.addEventListener('touchend', (e) => {
                 clearTimeout(_longPressTimer);
                 _longPressTimer = null;
             }, { passive: true });
@@ -1252,14 +1268,15 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
                 const _initVal = prop === 'emojiMixEnabled' ? (settings[prop] !== false) : !!settings[prop];
                 element.classList.toggle('active', _initVal);
 
-                element.addEventListener('click', () => {
+                element.addEventListener('click', (e) => {
+                    if (!e.target.closest('.setting-pill-switch')) return;
                     if (prop === 'emojiMixEnabled' && settings[prop] === undefined) settings[prop] = true;
                     settings[prop] = !settings[prop];
                     throttledSaveData();
                     updateUI();
                     element.classList.toggle('active', !!settings[prop]);
                     if (prop === 'pinyinMode') { var _pc=document.getElementById('pinyin-mode-control'); if(_pc) _pc.style.display = settings[prop] ? 'block' : 'none'; }
-                    if (prop !== 'soundEnabled') renderMessages(true);
+                    if (prop !== 'soundEnabled' && prop !== 'pinyinMode' && prop !== 'correctMode' && prop !== 'readReceiptsEnabled') renderMessages(true);
                     showNotification(`${name}已${settings[prop] ? '开启': '关闭'}`, 'success');
                 });
             }

@@ -135,3 +135,29 @@
         console.warn('[global-msg-banner] window._registerPartnerMessageListener 不存在，新消息横条功能不会生效（core.js 是否正常加载？）');
     }
 })();
+
+// 上滑关闭
+(function(){
+  var _sy = 0, _tracking = false;
+  document.addEventListener('touchstart', function(e){
+    var b = e.target.closest && e.target.closest('.gmb-banner, #global-msg-banner');
+    if (!b) return;
+    _tracking = true; _sy = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchmove', function(e){
+    if (!_tracking) return;
+    var dy = e.touches[0].clientY - _sy;
+    var b = document.querySelector('.gmb-banner, #global-msg-banner');
+    if (b) b.style.transform = 'translateY(' + Math.min(0, dy) + 'px)';
+  }, { passive: true });
+  document.addEventListener('touchend', function(e){
+    if (!_tracking) return; _tracking = false;
+    var dy = e.changedTouches[0].clientY - _sy;
+    var b = document.querySelector('.gmb-banner, #global-msg-banner');
+    if (b) b.style.transform = '';
+    if (dy < -40) {
+      if (b) { b.classList.remove('gmb-show'); b.style.display = 'none'; }
+      if (typeof window._gmbHide === 'function') { try { window._gmbHide(); } catch(err) {} }
+    }
+  }, { passive: true });
+})();

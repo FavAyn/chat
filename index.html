@@ -2963,7 +2963,7 @@ html[data-theme="dark"] #cs-transition-overlay{background:radial-gradient(circle
         <div id="custom-mood-dialog" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:var(--secondary-bg); padding:20px; border-radius:16px; width:80%; max-width:280px; z-index:2200; box-shadow:0 10px 30px rgba(0,0,0,0.3); text-align:center;">
             <h4 style="margin-bottom:12px; font-size:14px; font-weight:600;">自定义心情</h4>
             <div style="display:flex; gap:8px; margin-bottom:12px; overflow:hidden;">
-                <input id="custom-mood-emoji" type="text" maxlength="2" placeholder="表情" style="width:52px; flex-shrink:0; text-align:center; border:1px solid var(--border-color); border-radius:8px; padding:8px 4px; font-size:13px; background:var(--primary-bg); color:var(--text-primary);">
+                <input id="custom-mood-emoji" type="text" maxlength="8" placeholder="表情" style="width:52px; flex-shrink:0; text-align:center; border:1px solid var(--border-color); border-radius:8px; padding:8px 4px; font-size:13px; background:var(--primary-bg); color:var(--text-primary);">
                 <input id="custom-mood-label" type="text" maxlength="6" placeholder="名称（最多6字）" style="flex:1; min-width:0; border:1px solid var(--border-color); border-radius:8px; padding:8px 10px; font-size:13px; background:var(--primary-bg); color:var(--text-primary); font-family:var(--font-family);">
             </div>
             <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin-bottom:14px;">
@@ -2993,7 +2993,7 @@ html[data-theme="dark"] #cs-transition-overlay{background:radial-gradient(circle
                 </div>
                 <div id="mdd-my-empty" class="mdd-empty-msg" style="display:none;">今天还没有记录</div>
                 <div class="mdd-section-acts">
-                    <button class="mdd-act-btn" onclick="window._moodOpenEditor(window.selectedDateStr,'me')"><i class="fas fa-pencil-alt"></i></button>
+                    <button class="mdd-act-btn" onclick="window._openDiaryEditorFor && window._openDiaryEditorFor(window.selectedDateStr)"><i class="fas fa-pencil-alt"></i></button>
                     <button class="mdd-act-btn mdd-act-del" id="delete-my-mood" style="display:none;" onclick="deleteDailyMood(window.selectedDateStr,'me')"><i class="fas fa-trash"></i></button>
                 </div>
             </div>
@@ -3880,6 +3880,7 @@ html[data-theme="dark"] #cs-transition-overlay{background:radial-gradient(circle
     <script src="js/features/theme-mode.js"></script>
     <script src="js/features/image-viewer.js"></script>
     <script src="js/features/hub-badges.js"></script>
+    <script src="js/features/keyboard-fix.js"></script>
     <script src="js/features/envelope.js"></script>
     <script src="js/features/moments.js"></script>
     <script src="js/features/album.js"></script>
