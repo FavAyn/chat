@@ -484,3 +484,100 @@ body{ position: relative !important; }
   width:16px !important; height:16px !important;
 }
 .mood-lib-item.sel .mood-lib-del{ opacity:.8; }
+
+/* 顶部/底部：固定毛玻璃（雾感） */
+:root{ --glass-bg: rgba(249,249,249,.72); }
+html[data-theme="dark"]{ --glass-bg: rgba(18,18,18,.72); }
+.header, .input-area-wrapper{
+  background-color: var(--glass-bg) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+}
+.header:hover, .input-area-wrapper:hover{ background-color: var(--glass-bg) !important; }
+
+/* 取消输入框 focus 描边 */
+input:focus, textarea:focus, select:focus{
+  outline:none !important;
+  box-shadow:none !important;
+  border-color:var(--border-color) !important;
+}
+
+/* 全局禁止长按选择（输入框除外） */
+body{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+input, textarea, [contenteditable="true"]{
+  -webkit-user-select:text !important;
+  user-select:text !important;
+  -webkit-touch-callout:default !important;
+}
+
+/* 日记输入：微信感字号/光标 */
+#diary-note-input{
+  font-size:16px !important;
+  line-height:1.9 !important;
+  caret-color:var(--accent-color) !important;
+}
+
+/* 陪伴·我的音乐库按钮：恢复普通色 */
+#companion-noise-milk .companion-noise-option,
+#companion-noise-milk .companion-noise-option.active,
+#companion-noise-milk .companion-noise-option.on{
+  background:var(--primary-bg) !important;
+  border-color:var(--border-color) !important;
+  color:var(--text-primary) !important;
+}
+#companion-noise-milk .companion-noise-option i{ color:var(--accent-color) !important; }
+
+/* 数据管理·导出日记 */
+.dm-diary-list{ max-height:42vh; overflow-y:auto; display:flex; flex-direction:column; gap:6px; margin:6px 0 10px; }
+.dm-diary-item{ display:flex; align-items:center; gap:10px; padding:10px 12px; border:1px solid var(--border-color); border-radius:10px; background:var(--primary-bg); font-size:13px; color:var(--text-primary); cursor:pointer; }
+.dm-diary-item input{ accent-color:var(--accent-color); width:16px; height:16px; }
+.dm-diary-empty{ text-align:center; color:var(--text-secondary); font-size:13px; padding:20px 0; }
+
+.dm-diary-month{ font-size:12px; font-weight:600; color:var(--text-secondary); padding:8px 2px 4px; }
+
+/* 导出日记：月份折叠 */
+.dm-diary-group{ border-radius:10px; margin-bottom:6px; background:rgba(var(--accent-color-rgb),.04); }
+.dm-diary-month{ display:flex; align-items:center; justify-content:space-between; padding:9px 10px; font-size:12.5px; font-weight:600; color:var(--text-primary); cursor:pointer; }
+.dm-diary-month i{ font-size:10px; opacity:.6; transition:transform .2s; }
+.dm-diary-group.open .dm-diary-month i{ transform:rotate(180deg); }
+.dm-diary-items{ display:none; flex-direction:column; gap:6px; padding:0 8px 8px; }
+.dm-diary-group.open .dm-diary-items{ display:flex; }
+
+/* 视频通话窗口：跟随昼夜（浅色模式用偏亮蓝灰，白字仍清晰） */
+html[data-theme="light"] .call-bg-grad{
+  background: linear-gradient(155deg,#3a4a5e 0%,#52657c 50%,#6d8199 100%) !important;
+}
+html[data-theme="light"] #call-window{
+  box-shadow: 0 20px 60px rgba(40,60,90,.28), 0 0 0 1px rgba(255,255,255,.35) !important;
+}
+
+/* 性能：关闭消息逐条出现动画（长列表时明显更顺）+ 离屏消息不渲染 */
+.message-wrapper{ animation: none !important; opacity: 1 !important; }
+#chat-container .message-wrapper{
+  content-visibility: auto;
+  contain-intrinsic-size: auto 56px;
+}
+
+/* 陪伴设置·关闭按钮：和其他卡片统一 */
+.companion-noise-card-close{
+  background: var(--primary-bg) !important;
+  border: 1.5px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  border-radius: 12px !important;
+  padding: 14px 10px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  width: 100% !important;
+  margin-top: 10px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* 日记卡：对方不可见标记 */
+.diary-day{ position:relative; }
+.diary-hidden-badge{
+  position:absolute; right:10px; bottom:8px;
+  width:20px; height:20px; border-radius:50%;
+  background:rgba(127,127,127,.14); color:var(--text-secondary);
+  font-size:9px; display:flex; align-items:center; justify-content:center;
+}

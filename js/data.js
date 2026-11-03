@@ -37,9 +37,14 @@
         +     '</div>'
         +     '<div class="dm-tile" id="dm-tile-chat-backup">'
         +       '<div class="dm-tile-icon teal"><i class="fas fa-comments"></i></div>'
-        +       '<div class="dm-tile-info"><div class="dm-tile-title">聊天记录</div><div class="dm-tile-desc">消息内容单独备份</div></div>'
+        +       '<div class="dm-tile-info"><div class="dm-tile-title">聊天记录</div><div class="dm-tile-desc">消息内容的导入导出</div></div>'
         +       '<i class="fas fa-chevron-right dm-tile-arrow"></i>'
         +     '</div>'
++     '<div class="dm-tile" id="dm-tile-diary-export">'
++       '<div class="dm-tile-icon" style="background:linear-gradient(135deg,#A78BFA,#7C5CFA);color:#fff"><i class="fas fa-book"></i></div>'
++       '<div class="dm-tile-info"><div class="dm-tile-title">导出日记</div><div class="dm-tile-desc">选择日期导出文本</div></div>'
++       '<i class="fas fa-chevron-right dm-tile-arrow"></i>'
++     '</div>'
         +   '</div>'
 
         +   '<div style="display:none">'
@@ -134,6 +139,18 @@
         +   '</div>'
         + '</div>'
 
+var DRAWER_DIARY_HTML =
+'<div class="dm-action-drawer" id="dm-drawer-diary">'
++   '<div class="dm-drawer-backdrop" id="dm-drawer-diary-backdrop"></div>'
++   '<div class="dm-drawer-sheet">'
++     '<div class="dm-drawer-handle"></div>'
++     '<div class="dm-drawer-title"><div class="dm-drawer-title-icon" style="background:linear-gradient(135deg,#A78BFA,#7C5CFA);color:#fff"><i class="fas fa-book"></i></div><div><div class="dm-drawer-title-text">导出日记</div><div class="dm-drawer-subtitle">选择日期导出文本</div></div></div>'
++     '<div class="dm-diary-list" id="dm-diary-list"></div>'
++     '<button class="dm-drawer-action-btn primary" id="dm-diary-export-real" style="background:linear-gradient(135deg,#A78BFA,#7C5CFA);border-color:transparent;width:100%;margin-bottom:10px;"><div class="dm-drawer-btn-icon"><i class="fas fa-download"></i></div><div class="dm-drawer-btn-text"><div class="dm-drawer-btn-title">导出所选</div><div class="dm-drawer-btn-desc">生成 txt 文本</div></div></button>'
++     '<button class="dm-drawer-cancel" id="dm-drawer-diary-cancel">取消</button>'
++   '</div>'
++ '</div>';
+
     function isCorrect(mc) {
         return mc.querySelector('.modal-title') !== null
             && mc.querySelector('.dm-storage-card') !== null
@@ -142,7 +159,7 @@
     }
 
     function ensureDrawersOnBody() {
-        var DRAWER_IDS = ['dm-drawer-full', 'dm-drawer-chat'];
+var DRAWER_IDS = ['dm-drawer-full', 'dm-drawer-chat', 'dm-drawer-diary'];
         DRAWER_IDS.forEach(function(id) {
             var existing = document.getElementById(id);
             if (existing && existing.parentElement === document.body) return;
@@ -152,7 +169,9 @@
             }
             var dummy = document.createElement('div');
             if (id === 'dm-drawer-full') dummy.innerHTML = DRAWER_FULL_HTML;
-            else dummy.innerHTML = DRAWER_CHAT_HTML;
+if (id === 'dm-drawer-full') dummy.innerHTML = DRAWER_FULL_HTML;
+        else if (id === 'dm-drawer-diary') dummy.innerHTML = DRAWER_DIARY_HTML;
+        else dummy.innerHTML = DRAWER_CHAT_HTML;
             document.body.appendChild(dummy.firstElementChild);
         });
     }
@@ -314,6 +333,39 @@
         });
 
         var tileChatBackup = mc.querySelector('#dm-tile-chat-backup');
+    var tileDiaryExport = mc.querySelector('#dm-tile-diary-export');
+    if (tileDiaryExport) tileDiaryExport.addEventListener('click', function () {
+        renderDiaryExportList();
+        if (typeof openDrawer === 'function') openDrawer('dm-drawer-diary');
+    });
+    function renderDiaryExportList() {
+        var box = document.getElementById('dm-diary-list'); if (!box) return;
+        var md = window.moodData || {};
+        var keys = Object.keys(md).filter(function (k) { var e = md[k]; return e && (e.note || e.user); }).sort().reverse();
+        if (!keys.length) { box.innerHTML = '<div class="dm-diary-empty">还没有日记</div>'; return; }
+        var groups = {}, order = [];
+        keys.forEach(function (ds) { var k = ds.slice(0, 7); if (!groups[k]) { groups[k] = []; order.push(k); } groups[k].push(ds); });
+        box.innerHTML = order.map(function (k, gi) { return '<div class="dm-diary-group" data-k="' + k + '"><div class="dm-diary-month">' + k.replace('-', '年') + '月<i class="fas fa-chevron-down"></i></div><div class="dm-diary-items">' + groups[k].map(function (ds) { return '<label class="dm-diary-item"><input type="checkbox" value="' + ds + '"><span>' + ds + '</span></label>'; }).join('') + '</div></div>'; }).join('');
+        box.querySelectorAll('.dm-diary-month').forEach(function (h) { h.addEventListener('click', function () { h.parentElement.classList.toggle('open'); }); });
+    }
+    var _diaryExpBtn = document.getElementById('dm-diary-export-real');
+    if (_diaryExpBtn) _diaryExpBtn.addEventListener('click', function () {
+        var box = document.getElementById('dm-diary-list');
+        var sel = Array.prototype.slice.call(box.querySelectorAll('input:checked')).map(function (i) { return i.value; }).sort();
+        if (!sel.length) { if (typeof showNotification === 'function') showNotification('请先选择日期', 'info'); return; }
+        var md = window.moodData || {};
+        var txt = sel.map(function (ds) {
+            var e = md[ds] || {}; var parts = [ds];
+            if (e.user) { var nm = ''; try { var a = window.getAllMoodOptions ? window.getAllMoodOptions() : []; for (var i = 0; i < a.length; i++) { if (a[i].key === e.user) { nm = a[i].kaomoji + ' ' + a[i].label; break; } } } catch (err) {} if (nm) parts.push('心情：' + nm); }
+            if (e.note) parts.push('内容：' + e.note);
+            return parts.join('\n');
+        }).join('\n\n');
+        var blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+        var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = '日记-' + sel[0] + '~' + sel[sel.length - 1] + '.txt';
+        document.body.appendChild(a); a.click(); a.remove();
+        if (typeof closeDrawer === 'function') closeDrawer('dm-drawer-diary');
+        if (typeof showNotification === 'function') showNotification('已导出 ' + sel.length + ' 天日记', 'success');
+    });
         if (tileChatBackup) tileChatBackup.addEventListener('click', function () { openDrawer('dm-drawer-chat'); });
 
         var fullDrawer = document.getElementById('dm-drawer-full');
@@ -322,6 +374,11 @@
             if (backdrop1) backdrop1.addEventListener('click', function () { closeDrawer('dm-drawer-full'); });
             var cancelBtn1 = fullDrawer.querySelector('#dm-drawer-full-cancel');
             if (cancelBtn1) cancelBtn1.addEventListener('click', function () { closeDrawer('dm-drawer-full'); });
+    var _dd = document.getElementById('dm-drawer-diary');
+    if (_dd) {
+        var _ddb = _dd.querySelector('#dm-drawer-diary-backdrop'); if (_ddb) _ddb.addEventListener('click', function () { closeDrawer('dm-drawer-diary'); });
+        var _ddc = _dd.querySelector('#dm-drawer-diary-cancel'); if (_ddc) _ddc.addEventListener('click', function () { closeDrawer('dm-drawer-diary'); });
+    }
             var exportAllReal = fullDrawer.querySelector('#export-all-settings-real');
             if (exportAllReal) exportAllReal.addEventListener('click', function () {
                 closeDrawer('dm-drawer-full');

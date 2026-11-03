@@ -383,7 +383,7 @@ html[data-theme="dark"] #cs-transition-overlay{background:radial-gradient(circle
         <div id="collapsed-extras-panel" style="display:none;">
             <div class="collapsed-extras-inner" style="padding:12px; background:var(--secondary-bg); border-top:1px solid var(--border-color);">
                 <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:12px;">
-                    <button class="collapsed-extra-btn" id="attachment-btn-extra" title="发送图片" onclick="document.getElementById('image-input').click()">
+                    <button class="collapsed-extra-btn" id="attachment-btn-extra" title="发送图片" onclick="document.getElementById('attachment-btn').click()">
                         <i class="fas fa-image"></i>
                     </button>
                     <button class="collapsed-extra-btn" id="combo-btn-extra" title="表情拍一拍">
@@ -444,6 +444,7 @@ html[data-theme="dark"] #cs-transition-overlay{background:radial-gradient(circle
         </div>
     </div>
     <input type="file" id="image-input" class="file-input" accept="image/*">
+    <input type="file" id="image-input-camera" class="file-input" accept="image/*" capture="environment">
     <input type="file" id="my-sticker-quick-upload" class="file-input" accept="image/*" multiple>
 </div>
     </div>
@@ -3881,6 +3882,8 @@ html[data-theme="dark"] #cs-transition-overlay{background:radial-gradient(circle
     <script src="js/features/image-viewer.js"></script>
     <script src="js/features/hub-badges.js"></script>
     <script src="js/features/keyboard-fix.js"></script>
+    <script src="js/features/weekly-diary-export.js"></script>
+    <script src="js/features/image-pick.js"></script>
     <script src="js/features/envelope.js"></script>
     <script src="js/features/moments.js"></script>
     <script src="js/features/album.js"></script>

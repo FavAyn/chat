@@ -1929,6 +1929,7 @@ if (sessionId === currentSessionId) {
 
             DOMElements.attachmentBtn.addEventListener('click', () => {
 
+                const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && window.matchMedia('(pointer: coarse)').matches);
                 const modal = document.createElement('div');
                 modal.className = 'modal image-upload-modal';
                 modal.style.cssText = `
@@ -1963,7 +1964,11 @@ if (sessionId === currentSessionId) {
             ">
             <div class="modal-title"><i class="fas fa-image"></i><span>发送图片</span></div>
             <div style="margin-bottom: 16px;">
-            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <div id="image-mobile-choices" style="display:none; gap: 10px; margin-bottom: 10px;">
+            <button class="modal-btn modal-btn-secondary" id="image-album-btn" style="flex: 1;"><i class="fas fa-images"></i> 相册</button>
+            <button class="modal-btn modal-btn-secondary" id="image-camera-btn" style="flex: 1;"><i class="fas fa-camera"></i> 拍照</button>
+            </div>
+            <div id="image-desktop-choices" style="display: flex; gap: 10px; margin-bottom: 10px;">
             <button class="modal-btn modal-btn-secondary upload-mode-btn active" id="upload-image-file-btn" style="flex: 1;">选择文件</button>
             <button class="modal-btn modal-btn-secondary upload-mode-btn" id="paste-image-url-btn" style="flex: 1;">粘贴URL</button>
             </div>
@@ -2002,6 +2007,18 @@ if (sessionId === currentSessionId) {
 
                 let currentImageData = null;
 
+                const mobileChoices = document.getElementById('image-mobile-choices');
+                const desktopChoices = document.getElementById('image-desktop-choices');
+                const albumBtn = document.getElementById('image-album-btn');
+                const cameraBtn = document.getElementById('image-camera-btn');
+                if (isMobile) {
+                    if (mobileChoices) mobileChoices.style.display = 'flex';
+                    if (desktopChoices) desktopChoices.style.display = 'none';
+                    fileInput.style.display = 'none';
+                }
+                if (albumBtn) albumBtn.addEventListener('click', () => { fileInput.removeAttribute('capture'); fileInput.click(); });
+                if (cameraBtn) cameraBtn.addEventListener('click', () => { fileInput.setAttribute('capture', 'environment'); fileInput.click(); });
+
 
                 function switchUploadMode(isFileMode) {
                     uploadModeBtns.forEach(btn => btn.classList.remove('active'));
@@ -2030,6 +2047,7 @@ if (sessionId === currentSessionId) {
 
                 fileInput.addEventListener('change', function(e) {
                     const file = e.target.files[0];
+                    fileInput.removeAttribute('capture');
                     if (file) {
                         if (file.size > MAX_IMAGE_SIZE) {
                             showNotification('图片大小不能超过5MB', 'error');

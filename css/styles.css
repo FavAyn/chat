@@ -13738,3 +13738,66 @@ body #user-sticker-picker .empty-sticker-tip {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+/* ── 性能优化：降低 backdrop-filter 模糊与重绘 ── */
+.header {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+.typing-indicator {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+.typing-indicator-avatar {
+    animation: none !important;
+}
+.splash-card {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+.welcome-content-wrapper {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+.player-container {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+.notification-toast {
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+}
+.modal {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+/* 手机端：直接关掉大面积实时模糊，改用更实的底色，滚动更顺 */
+@media (max-width: 768px), (pointer: coarse) {
+    .header {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: rgba(var(--header-bg-rgb, 255,255,255), 0.94) !important;
+    }
+    body.with-background .header,
+    body.with-background .input-area-wrapper {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background-color: rgba(var(--secondary-bg-rgb), 0.78) !important;
+    }
+    .typing-indicator {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: rgba(var(--secondary-bg-rgb), 0.97);
+    }
+    .splash-card,
+    .welcome-content-wrapper,
+    .player-container {
+        backdrop-filter: blur(6px) !important;
+        -webkit-backdrop-filter: blur(6px) !important;
+    }
+    .modal {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+}

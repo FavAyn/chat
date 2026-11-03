@@ -1227,7 +1227,6 @@ window.toggleImmersiveMode = function(force) {
     var toggle = document.getElementById('immersive-toggle');
     if (toggle) toggle.classList.toggle('active', isOn);
     try { localStorage.setItem('immersive_mode', isOn ? '1' : '0'); } catch(e) {}
-    if (!isOn && typeof showNotification === 'function') showNotification('已退出沉浸式模式', 'info');
 };
 
 (function() {
