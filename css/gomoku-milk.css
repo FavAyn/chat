@@ -275,12 +275,22 @@ body.immersive-mode .chat-container{ padding-top:calc(52px + env(safe-area-inset
 body.immersive-mode #immersive-exit-btn{ display:none !important; }
 
 
-/* 稳定布局：body 高度跟随可视区（桌面=100vh，手机=visualViewport 高度） */
+/* 稳定布局：锁死页面本身滚动（iOS 键盘不再顶飞上下弹窗） */
+html{
+  position: fixed !important;
+  top:0 !important; left:0 !important; right:0 !important; bottom:0 !important;
+  height:100% !important;
+  width:100% !important;
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
 body{
   position: absolute !important;
-  top:0 !important; left:0 !important; right:0 !important; bottom:auto !important;
-  height: var(--app-h, 100vh) !important;
+  top:0 !important; left:0 !important; right:0 !important;
+  bottom:0 !important;
+  height: var(--app-h, 100%) !important;
   overflow: hidden !important;
+  overscroll-behavior: none;
 }
 
 /* ===== 陪伴设置弹窗：不透明背景（不影响陪伴页壁纸） ===== */

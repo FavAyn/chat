@@ -15,9 +15,10 @@
     var el = document.querySelector('.input-area-wrapper');
     if (el) el.style.bottom = kb > 80 ? kb + 'px' : '';
     document.body.classList.toggle('kb-open', kb > 80);
+    try { window.scrollTo(0, 0); document.documentElement.scrollTop = 0; document.body.scrollTop = 0; } catch (e) {}
   }
   setH(); resetInput();
-  window.addEventListener('resize', function () { setH(); resetInput(); });
+  window.addEventListener('resize', function () { setH(); resetInput(); setTimeout(function () { try { window.scrollTo(0, 0); } catch (e) {} }, 60); });
   if (vv) {
     vv.addEventListener('resize', function () { setH(); resetInput(); });
     vv.addEventListener('scroll', function () { setH(); });
