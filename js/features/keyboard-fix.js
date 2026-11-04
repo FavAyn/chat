@@ -1,17 +1,34 @@
-/* 手机键盘弹出时顶起输入栏，避免遮住输入框（iOS 需用 visualViewport） */
+/* 稳定布局：body 高度跟随可视区；切后台回来重新校准；键盘顶起输入栏 */
 (function () {
-  if (!window.visualViewport) return;
+  var root = document.documentElement;
   var vv = window.visualViewport;
-  function apply() {
-    var kb = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
-    var el = document.querySelector('.input-area-wrapper');
-    var open = kb > 80;
-    if (el) el.style.bottom = open ? kb + 'px' : '';
-    document.body.classList.toggle('kb-open', open);
-    if (open) { try { window.scrollTo(0, 0); } catch (e) {} }
+  var lastH = 0;
+  function setH() {
+    var h = (vv && vv.height) ? vv.height : window.innerHeight;
+    if (!h || h < 200) return;
+    lastH = h;
+    root.style.setProperty('--app-h', Math.round(h) + 'px');
   }
-  vv.addEventListener('resize', apply);
-  vv.addEventListener('scroll', apply);
-  window.addEventListener('orientationchange', function () { setTimeout(apply, 300); });
-  setTimeout(apply, 300);
+  function resetInput() {
+    var kb = 0;
+    if (vv) kb = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+    var el = document.querySelector('.input-area-wrapper');
+    if (el) el.style.bottom = kb > 80 ? kb + 'px' : '';
+    document.body.classList.toggle('kb-open', kb > 80);
+  }
+  setH(); resetInput();
+  window.addEventListener('resize', function () { setH(); resetInput(); });
+  if (vv) {
+    vv.addEventListener('resize', function () { setH(); resetInput(); });
+    vv.addEventListener('scroll', function () { setH(); });
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) return;
+    if (lastH) { root.style.setProperty('--app-h', Math.round(lastH) + 'px'); resetInput(); }
+    setTimeout(setH, 80);
+    setTimeout(function () { setH(); resetInput(); }, 350);
+    setTimeout(function () { setH(); resetInput(); }, 900);
+  });
+  window.addEventListener('pageshow', function () { setH(); resetInput(); });
+  window.addEventListener('orientationchange', function () { setTimeout(function () { setH(); resetInput(); }, 350); });
 })();
