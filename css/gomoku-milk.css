@@ -275,23 +275,6 @@ body.immersive-mode .chat-container{ padding-top:calc(52px + env(safe-area-inset
 body.immersive-mode #immersive-exit-btn{ display:none !important; }
 
 
-/* 稳定布局：锁死页面本身滚动（iOS 键盘不再顶飞上下弹窗） */
-html{
-  position: fixed !important;
-  top:0 !important; left:0 !important; right:0 !important; bottom:0 !important;
-  height:100% !important;
-  width:100% !important;
-  overflow: hidden !important;
-  overscroll-behavior: none;
-}
-body{
-  position: absolute !important;
-  top:0 !important; left:0 !important; right:0 !important;
-  bottom:0 !important;
-  height: var(--app-h, 100%) !important;
-  overflow: hidden !important;
-  overscroll-behavior: none;
-}
 
 /* ===== 陪伴设置弹窗：不透明背景（不影响陪伴页壁纸） ===== */
 .companion-modal{ background:rgba(0,0,0,.6) !important; }
@@ -388,18 +371,6 @@ body{
 .stk-rank-n{ font-size:10px; color:var(--text-secondary); }
 .stats-empty-mini{ font-size:12px; color:var(--text-secondary); padding:6px 0; }
 
-/* 顶部/底部不透明（去掉灰雾） */
-.header{
-  opacity:1 !important;
-  backdrop-filter:none !important;
-  -webkit-backdrop-filter:none !important;
-  background-color:var(--primary-bg) !important;
-}
-.input-area-wrapper{
-  background-color:var(--primary-bg) !important;
-  backdrop-filter:none !important;
-  -webkit-backdrop-filter:none !important;
-}
 
 /* 消息区禁文本选择（防止长按出系统菜单） */
 #chat-container .message,
@@ -490,22 +461,12 @@ body{
 }
 .mood-lib-item.sel .mood-lib-del{ opacity:.8; }
 
-/* 顶部/底部：固定毛玻璃（雾感） */
-:root{ --glass-bg: rgba(249,249,249,.72); }
-html[data-theme="dark"]{ --glass-bg: rgba(18,18,18,.72); }
-.header, .input-area-wrapper{
-  background-color: var(--glass-bg) !important;
-  backdrop-filter: blur(18px) !important;
-  -webkit-backdrop-filter: blur(18px) !important;
-}
-.header:hover, .input-area-wrapper:hover{ background-color: var(--glass-bg) !important; }
 
 /* 取消输入框 focus 描边 */
-input:focus, textarea:focus, select:focus{
-  outline:none !important;
-  box-shadow:none !important;
-  border-color:var(--border-color) !important;
-}
+/* 取消所有输入框 focus 变色/描边 */
+input:focus, input:focus-visible, textarea:focus, textarea:focus-visible, select:focus, select:focus-visible, [contenteditable="true"]:focus{ outline:none !important; box-shadow:none !important; }
+.message-input:focus, .message-input:focus-visible{ border-color: transparent !important; background-color: var(--primary-bg) !important; box-shadow: none !important; outline: none !important; }
+.modal-input:focus, .modal-textarea:focus, .ti-text-input:focus, .leno-question-input:focus, .playlist-search-input:focus{ border-color: var(--border-color) !important; box-shadow: none !important; outline: none !important; }
 
 /* 全局禁止长按选择（输入框除外） */
 body{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
@@ -582,3 +543,16 @@ html[data-theme="light"] #call-window{
   background:rgba(127,127,127,.14); color:var(--text-secondary);
   font-size:9px; display:flex; align-items:center; justify-content:center;
 }
+
+/* 固定上下弹窗：顶部 header 固定，主聊天区留出头部高度 */
+.header{
+  position: fixed !important;
+  top: 0 !important; left: 0 !important; right: 0 !important;
+  z-index: 100 !important;
+}
+.main-chat-area{
+  padding-top: var(--header-h, 96px) !important;
+}
+
+/* 沉浸模式：header 隐藏，主区不再为 header 留空（由沉浸条自己留） */
+body.immersive-mode .main-chat-area{ padding-top: 0 !important; }
