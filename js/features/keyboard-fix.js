@@ -1,4 +1,4 @@
-/* 固定上下弹窗：顶部 header 固定并量高度；键盘弹出时把输入栏顶到键盘上方（不动 body 高度） */
+/* 固定上下弹窗：header 固定；键盘弹出时输入栏顶到键盘上方，聊天区底部也让出键盘高度 */
 (function () {
   var root = document.documentElement;
   var vv = window.visualViewport;
@@ -11,11 +11,14 @@
   function setInput() {
     var kb = 0;
     if (vv) kb = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
-    root.style.setProperty('--kb', (kb > 0 ? kb : 0) + 'px');
+    var open = kb > 80;
     var el = document.querySelector('.input-area-wrapper');
-    if (el) el.style.bottom = kb > 80 ? kb + 'px' : '';
+    if (el) el.style.bottom = open ? kb + 'px' : '';
+    var main = document.querySelector('.main-chat-area');
+    if (main) main.style.paddingBottom = open ? (kb + 70) + 'px' : '';
     var cb = document.querySelector('.companion-input-bar');
-    if (cb) cb.style.bottom = kb > 80 ? (kb + 16) + 'px' : '';
+    if (cb) cb.style.bottom = open ? (kb + 16) + 'px' : '';
+    document.body.classList.toggle('kb-open', open);
   }
   setHeaderH(); setInput();
   window.addEventListener('resize', function () { setHeaderH(); setInput(); });
