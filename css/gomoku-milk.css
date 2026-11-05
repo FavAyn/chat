@@ -544,26 +544,5 @@ html[data-theme="light"] #call-window{
   font-size:9px; display:flex; align-items:center; justify-content:center;
 }
 
-/* 固定上下弹窗：顶部 header 固定，主聊天区留出头部高度 */
-.header{
-  position: fixed !important;
-  top: 0 !important; left: 0 !important; right: 0 !important;
-  z-index: 100 !important;
-}
-.main-chat-area{
-  padding-top: var(--header-h, 96px) !important;
-}
 
-/* 沉浸模式：header 隐藏，主区不再为 header 留空（由沉浸条自己留） */
-body.immersive-mode .main-chat-area{ padding-top: 0 !important; }
-
-/* ===== 标准锁画布：页面本身不滚，只有聊天区滚；键盘不再顶飞上下弹窗 ===== */
-html, body{
-  height: 100% !important;
-  overflow: hidden !important;
-  overscroll-behavior: none;
-}
-body{
-  position: fixed !important;
-  top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
 }

@@ -48,3 +48,9 @@
 - 键盘弹出时聊天区 padding-bottom 让出键盘高度（修复聊天记录只在上半屏）
 
 - 改为标准锁画布（html/body 100% + body fixed），移除 header fixed 与补白，避免键盘顶飞
+
+- 删除残留的 header fixed / main 补白（body fixed 后不需要）
+
+- 恢复原版布局（删除 html/body 锁定与 body fixed，停用 keyboard-fix），保留所有功能
+
+- 新增 blur-reset.js：键盘收起（失焦）后复位页面滚动，修复下半屏点不动
